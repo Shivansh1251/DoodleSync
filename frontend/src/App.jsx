@@ -1,5 +1,6 @@
 import './index.css'
 import BasicExample from './Components/BasicExample'
+import RoomEntry from './pages/RoomEntry'
 import { Routes, Route } from "react-router-dom"
 import Home from './pages/Home'
 import Login from './pages/Loginpage'
@@ -7,6 +8,7 @@ import MainPage from './pages/Mainpage'
 import CustomCursor from './Components/CustomCursor'
 import Chat from './pages/Chat'
 import Signup from './pages/Signup'
+// import Whiteboard from './Components/Whiteboard'
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
         <CustomCursor />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/room" element={<RoomEntry />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/main" element={<MainPage />} />
