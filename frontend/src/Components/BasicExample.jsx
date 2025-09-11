@@ -4,7 +4,7 @@ import 'tldraw/tldraw.css'
 import SideChat from './SideChat'
 import { io } from 'socket.io-client'
 
-const SERVER = 'http://localhost:4000'
+const SERVER = 'https://doodlesync-backend.onrender.com'
 
 function getUser() {
   let name = localStorage.getItem('ds_user')
