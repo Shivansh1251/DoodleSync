@@ -68,6 +68,12 @@ io.on("connection", (socket) => {
   // chat message
   socket.on("chat-message", (roomId, message) => {
     // message: { author: {id,name}, text, ts }
+    // Add error handling for undefined message
+    if (!message || typeof message !== 'object') {
+      console.error(`[chat] Invalid message received for room=${roomId}:`, message);
+      return;
+    }
+    
     // ensure an id exists to de-dup on client if needed
     message.id ||= Date.now();
     console.log(`[chat] room=${roomId} from=${message?.author?.name}: ${message?.text}`)

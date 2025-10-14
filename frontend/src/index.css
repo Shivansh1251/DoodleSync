@@ -1,8 +1,32 @@
 @import "tailwindcss";
+@import "tldraw/tldraw.css";
+
 /* index.css */
 body {
   /* Hide the native cursor; we'll draw our own */
   cursor: none;
+}
+
+/* Ensure Tldraw icons and cursor are visible */
+.tldraw__editor {
+  cursor: auto !important;
+}
+
+.tldraw__editor * {
+  cursor: auto !important;
+}
+
+/* Fix for Tldraw icons */
+.tlui-icon {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.tlui-button__icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* index.css */
