@@ -8,6 +8,8 @@ import MainPage from './pages/Mainpage'
 import CustomCursor from './Components/CustomCursor'
 import Chat from './pages/Chat'
 import Signup from './pages/Signup'
+import RoomBrowser from './Components/RoomBrowser'
+import ChatDebug from './Components/ChatDebug'
 // import Whiteboard from './Components/Whiteboard'
 
 function App() {
@@ -18,6 +20,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/room" element={<RoomEntry />} />
+          <Route path="/room-entry" element={<RoomEntry />} />
+          <Route path="/rooms" element={<RoomBrowser />} />
+          <Route path="/debug-chat" element={<ChatDebug />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/main" element={<MainPage />} />

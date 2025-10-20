@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import OnlineUsers from './OnlineUsers'
 
 function getUser() {
   let name = localStorage.getItem('ds_user')
@@ -9,12 +10,19 @@ function getUser() {
   return name
 }
 
-export default function SideChat({ onClose, roomId = 'default', socket }) {
-  const [messages, setMessages] = useState([])
-  const [present, setPresent] = useState([])
+export default function SideChat({ 
+  onClose, 
+  roomId = 'default', 
+  socket, 
+  messages = [], 
+  onSendMessage, 
+  user = { name: 'Anonymous' }, 
+  connected = false,
+  onlineUsers = []
+}) {
+  const [present, setPresent] = useState([`${user.name} (you)`]) // Initialize with current user
   const [activity, setActivity] = useState({})
   const [input, setInput] = useState('')
-  const user = useMemo(() => getUser(), [])
   const channelRef = useRef(null)
   const storageKey = `board-chat-event-${roomId}`
   const listRef = useRef(null)
@@ -30,35 +38,39 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
   }
 
   useEffect(() => {
-    // socket backend chat
+    // Only handle presence and activity events, not chat messages (handled by parent)
     const s = socket?.current
-    const onSocketMsg = (msg) => {
-      // normalize backend payload { author:{name}, text, ts, id }
-      const normalized = {
-        id: msg.id ?? Date.now(),
-        user: msg.author?.name ?? 'Unknown',
-        text: msg.text ?? '',
-        ts: typeof msg.ts === 'number' ? new Date(msg.ts).toISOString() : (msg.ts || new Date().toISOString()),
-      }
-  setMessages((m) => (m.some((x) => x.id === normalized.id) ? m : [...m, normalized]))
-    }
+    console.log('SideChat: Using socket:', s?.connected ? 'connected' : 'not connected') // DEBUG
+    
     const onPresence = (evt) => {
+      console.log('SideChat: Presence event:', evt) // DEBUG
       if (!evt?.type || !evt?.user?.name) return
-      const text = evt.type === 'join' ? `${evt.user.name} joined` : `${evt.user.name} left`
-      const msg = { id: `presence-${evt.type}-${evt.user.name}-${Date.now()}`, user: 'system', text, ts: new Date().toISOString() }
-      setMessages((m) => [...m, msg])
-      // update present list
+      
+      // Update present list based on socket count, not user list
       if (evt.sockets) {
-        setPresent(evt.sockets.map((sid) => evt.users?.[sid]?.name || sid))
+        const socketCount = Array.from(evt.sockets).length || 1
+        // Create a simple present list based on socket count
+        const presentList = [`${user.name} (you)`]
+        if (socketCount > 1) {
+          for (let i = 1; i < socketCount; i++) {
+            presentList.push(`User${i + 1}`)
+          }
+        }
+        setPresent(presentList)
+      } else {
+        // Fallback: at least show current user
+        setPresent([`${user.name} (you)`])
       }
     }
+    
     const onActivity = (evt) => {
       // evt: { user: {name}, type: 'drawing'|'writing', active: true|false }
       if (!evt?.user?.name || !evt?.type) return
       setActivity((a) => ({ ...a, [evt.user.name]: evt.active ? evt.type : null }))
     }
+    
     if (s) {
-      s.on('chat-message', onSocketMsg)
+      console.log('SideChat: Setting up presence/activity listeners') // DEBUG
       s.on('presence-update', onPresence)
       s.on('activity', onActivity)
     }
@@ -86,7 +98,7 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
       window.removeEventListener('storage', onStorage)
       if (channelRef.current?.close) channelRef.current.close()
       if (s) {
-        s.off('chat-message', onSocketMsg)
+        console.log('SideChat: Cleaning up socket event listeners') // DEBUG
         s.off('presence-update', onPresence)
         s.off('activity', onActivity)
       }
@@ -102,14 +114,11 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
     e?.preventDefault?.()
     const text = input.trim()
     if (!text) return
-    const msg = { id: Date.now(), user, text, ts: new Date().toISOString() }
-    setMessages((m) => [...m, msg])
-    try {
-      const s = socket?.current
-      if (s?.connected) {
-        s.emit('chat-message', roomId, { author: { name: user }, text, ts: Date.now() })
-      }
-    } catch (_) { }
+    
+    // Use the passed onSendMessage function
+    if (onSendMessage) {
+      onSendMessage(text)
+    }
     try {
       channelRef.current?.postMessage(msg)
     } catch (_) { }
@@ -148,8 +157,8 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
         <div className="text-sm font-semibold">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">Live Chat</span>
           <span className="ml-2 inline-flex items-center text-[10px] text-gray-500">
-            <span className="w-2 h-2 rounded-full bg-green-500 mr-1" />
-            Room {roomId}
+            <span className={`w-2 h-2 rounded-full mr-1 ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+            Room {roomId} ({messages.length} messages)
             {isAdmin && (
               <button onClick={handleCopy} className="ml-2 px-2 py-1 rounded bg-gray-200 text-xs hover:bg-gray-300">Copy</button>
             )}
@@ -159,38 +168,55 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
           <button onClick={onClose} className="text-xs px-2 py-1 rounded hover:bg-gray-100">Close</button>
         )}
       </div>
-      {/* Presence list */}
-      <div className="px-3 py-2 border-b text-xs text-gray-600 flex flex-wrap gap-2 items-center">
-        <span className="font-semibold">Present:</span>
-        {present.length === 0 ? <span>Loading...</span> : present.map((name) => (
-          <span key={name} className="px-2 py-1 rounded bg-gray-100">{name}{activity[name] ? ` (${activity[name]})` : ''}</span>
-        ))}
+      {/* Online Users */}
+      <div className="px-3 py-2 border-b">
+        <OnlineUsers socket={socket} roomId={roomId} onlineUsers={onlineUsers} />
       </div>
       
       <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2">
-        {messages.map((m) => {
-          const mine = m.user === user
-          return (
-            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className="max-w-[85%]">
-                {!mine && (
-                  <div className="text-[10px] text-gray-500 mb-0.5">{m.user}</div>
-                )}
-                <div
-                  className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${mine
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-sm'
-                      : 'bg-gray-100 text-gray-800 rounded-tl-sm'
-                    }`}
-                >
-                  {m.text}
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-500 text-sm py-4">
+            No messages yet. Start the conversation!
+          </div>
+        ) : (
+          messages.map((m) => {
+            const authorName = m.author?.name || m.user || 'Unknown'
+            const mine = authorName === user.name
+            const isSystem = m.isSystemMessage || authorName === 'System'
+            
+            // Render system messages differently
+            if (isSystem) {
+              return (
+                <div key={m.id} className="flex justify-center my-2">
+                  <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium border border-blue-200">
+                    {m.text}
+                  </div>
                 </div>
-                <div className={`mt-1 text-[10px] ${mine ? 'text-indigo-500/80 text-right' : 'text-gray-500'}`}>
-                  {formatTime(m.ts)}
+              )
+            }
+            
+            return (
+              <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                <div className="max-w-[85%]">
+                  {!mine && (
+                    <div className="text-[10px] text-gray-500 mb-0.5">{authorName}</div>
+                  )}
+                  <div
+                    className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${mine
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-sm'
+                        : 'bg-gray-100 text-gray-800 rounded-tl-sm'
+                      }`}
+                  >
+                    {m.text}
+                  </div>
+                  <div className={`mt-1 text-[10px] ${mine ? 'text-indigo-500/80 text-right' : 'text-gray-500'}`}>
+                    {formatTime(m.timestamp || m.ts)}
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
         <div ref={endRef} />
       </div>
       <form onSubmit={send} className="p-3 border-t flex flex-col gap-2">
@@ -206,9 +232,9 @@ export default function SideChat({ onClose, roomId = 'default', socket }) {
           <button
             type="submit"
             className="px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 disabled:opacity-50"
-            disabled={!input.trim()}
+            disabled={!input.trim() || !connected}
           >
-            Send
+            {connected ? 'Send' : 'Connecting...'}
           </button>
           <span className="text-[10px] text-gray-400">Enter to send • Shift+Enter newline</span>
         </div>

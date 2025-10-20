@@ -15,9 +15,6 @@ export default function Navbar() {
           {/* Center Links */}
           <ul className="hidden md:flex gap-4 text-gray-700 font-medium text-sm">
             <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="hover:text-purple-600">Design</Link></li>
-            {/* <li><a href="#" className="hover:text-purple-600">Product</a></li>
-            <li><a href="#" className="hover:text-purple-600">Plans</a></li>
-            <li><a href="#" className="hover:text-purple-600">Business</a></li> */}
             <li><a href="#templates" className="hover:text-purple-600">Templates</a></li>
             <li><Link to="/" className="hover:text-purple-600">Help</Link></li>
           </ul>

@@ -6,6 +6,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+CHAT_DEBUG_GUIDE.md
+CHAT_FIXED_SUMMARY.md
+CONNECTION_TEST.md
+CONNECTION_TEST.md
+MONGODB_SETUP.md
+FRONTEND_CONNECTION_STATUS.md
+ROOMS_CHAT_FIXES.md
+UI_FIXES_SUMMARY.md
+
 # Runtime data
 pids
 *.pid

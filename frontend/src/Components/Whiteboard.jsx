@@ -44,6 +44,12 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
       console.log("chat", msg);
     });
 
+    // NEW: handle chat history from MongoDB
+    s.on("chat-history", (messages) => {
+      console.log("chat history loaded:", messages.length, "messages");
+      // Pass to ChatPanel component
+    });
+
     // join the room
     s.emit("join-room", roomId, user);
 
@@ -93,32 +99,65 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
 function ChatPanel({ socketRef, roomId, user }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const s = socketRef.current;
     if (!s) return;
-    const handler = (msg) => setMessages((m) => [...m, msg]);
-    s.on("chat-message", handler);
-    return () => s.off("chat-message", handler);
+    
+    // Handle new chat messages
+    const handleMessage = (msg) => {
+      setMessages((m) => [...m, msg]);
+    };
+    
+    // Handle chat history from MongoDB
+    const handleHistory = (history) => {
+      setMessages(history || []);
+      setIsLoading(false);
+    };
+    
+    s.on("chat-message", handleMessage);
+    s.on("chat-history", handleHistory);
+    
+    return () => {
+      s.off("chat-message", handleMessage);
+      s.off("chat-history", handleHistory);
+    };
   }, [socketRef]);
 
   const send = () => {
     if (!text.trim()) return;
-    const msg = { author: user, text: text.trim(), ts: Date.now() };
+    const msg = { 
+      author: user, 
+      text: text.trim(), 
+      timestamp: new Date(),
+      id: Date.now().toString()
+    };
     socketRef.current.emit("chat-message", roomId, msg);
-    setMessages((m) => [...m, msg]);
+    // Don't add to local messages - wait for server confirmation
     setText("");
   };
 
   return (
     <div className="flex flex-col h-full">
+      <div className="mb-2 text-sm text-gray-600">
+        Chat {isLoading ? "(Loading...)" : `(${messages.length} messages)`}
+      </div>
       <div className="flex-1 overflow-auto space-y-2">
-        {messages.map((m, i) => (
-          <div key={i}>
-            <strong>{m.author.name}</strong>: {m.text}
-            <div className="text-xs text-gray-400">{new Date(m.ts).toLocaleTimeString()}</div>
-          </div>
-        ))}
+        {isLoading ? (
+          <div className="text-center text-gray-500 py-4">Loading chat history...</div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-gray-500 py-4">No messages yet. Start the conversation!</div>
+        ) : (
+          messages.map((m, i) => (
+            <div key={m.id || i}>
+              <strong>{m.author?.name || 'Anonymous'}</strong>: {m.text}
+              <div className="text-xs text-gray-400">
+                {new Date(m.timestamp || m.ts).toLocaleTimeString()}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="mt-2 flex gap-2">
