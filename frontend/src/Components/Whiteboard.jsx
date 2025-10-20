@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Tldraw, TldrawEditor } from "tldraw"; // slight abstraction: check docs for exact import
 import { io } from "socket.io-client";
 
-const SERVER = "http://localhost:4000";
+const SERVER = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
 
 export default function Whiteboard({ roomId = "default", user = { id: "u1", name: "Shivansh" } }) {
   const socketRef = useRef(null);

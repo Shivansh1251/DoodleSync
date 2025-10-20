@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ApiService from '../utils/ApiService'
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
+
 export default function RoomEntry() {
   const [mode, setMode] = useState('public')
   const [roomId, setRoomId] = useState('')
@@ -24,7 +26,7 @@ export default function RoomEntry() {
     try {
       // First test if server is running
       console.log('Testing server connection...')
-      const healthResponse = await fetch('http://localhost:4000/api/health')
+      const healthResponse = await fetch(`${SERVER_URL}/api/health`)
       if (!healthResponse.ok) {
         throw new Error('Server health check failed')
       }
@@ -32,8 +34,8 @@ export default function RoomEntry() {
       console.log('Server health:', healthData)
       
       // Now load rooms
-      console.log('Loading existing rooms from:', 'http://localhost:4000/api/rooms')
-      const response = await fetch('http://localhost:4000/api/rooms')
+      console.log('Loading existing rooms from:', `${SERVER_URL}/api/rooms`)
+      const response = await fetch(`${SERVER_URL}/api/rooms`)
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`)
       }
@@ -92,7 +94,7 @@ export default function RoomEntry() {
       }
       
       console.log('Creating test room via API...')
-      const response = await fetch('http://localhost:4000/api/create-test-room', {
+      const response = await fetch(`${SERVER_URL}/api/create-test-room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })

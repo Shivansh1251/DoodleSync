@@ -1,5 +1,5 @@
 // Frontend API utility for MongoDB backend
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = `${import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'}/api`;
 
 class ApiService {
   static async getRoomInfo(roomId) {

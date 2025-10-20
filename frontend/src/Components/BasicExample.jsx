@@ -6,7 +6,7 @@ import ConnectionStatus from './ConnectionStatus'
 import OnlineUsers from './OnlineUsers'
 import { io } from 'socket.io-client'
 
-const SERVER = 'http://localhost:4000'
+const SERVER = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 
 function getUser() {
   let name = localStorage.getItem('ds_user')

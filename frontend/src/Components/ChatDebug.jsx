@@ -15,7 +15,7 @@ export default function ChatDebug({ roomId = 'test-room' }) {
 
   useEffect(() => {
     addLog('Creating socket connection...');
-    const s = io('http://localhost:4000', { transports: ['websocket'] });
+    const s = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:4000', { transports: ['websocket'] });
     setSocket(s);
 
     s.on('connect', () => {
