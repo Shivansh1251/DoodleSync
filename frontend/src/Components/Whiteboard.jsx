@@ -69,7 +69,7 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
 
   return (
     <div className="flex h-screen">
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-white dark:bg-gray-900 transition-colors duration-300">
         {/* TODO: Replace with the actual Tldraw component API.
             - You must grab an editor instance or pass onChange props.
             - Example (pseudocode): <Tldraw onMount={(app) => (editorRef.current = app)} onChange={onEditorChange} />
@@ -88,7 +88,7 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
       </div>
 
       {/* Right-side chat */}
-      <div className="w-80 border-l p-4">
+      <div className="w-80 border-l dark:border-gray-700 p-4 bg-white dark:bg-gray-800 transition-colors duration-300">
         <ChatPanel socketRef={socketRef} roomId={roomId} user={user} />
       </div>
     </div>
@@ -140,19 +140,19 @@ function ChatPanel({ socketRef, roomId, user }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-2 text-sm text-gray-600">
+      <div className="mb-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
         Chat {isLoading ? "(Loading...)" : `(${messages.length} messages)`}
       </div>
       <div className="flex-1 overflow-auto space-y-2">
         {isLoading ? (
-          <div className="text-center text-gray-500 py-4">Loading chat history...</div>
+          <div className="text-center text-gray-500 dark:text-gray-400 py-4 transition-colors duration-300">Loading chat history...</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-500 py-4">No messages yet. Start the conversation!</div>
+          <div className="text-center text-gray-500 dark:text-gray-400 py-4 transition-colors duration-300">No messages yet. Start the conversation!</div>
         ) : (
           messages.map((m, i) => (
-            <div key={m.id || i}>
+            <div key={m.id || i} className="text-gray-900 dark:text-gray-200 transition-colors duration-300">
               <strong>{m.author?.name || 'Anonymous'}</strong>: {m.text}
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 dark:text-gray-500 transition-colors duration-300">
                 {new Date(m.timestamp || m.ts).toLocaleTimeString()}
               </div>
             </div>
@@ -164,10 +164,10 @@ function ChatPanel({ socketRef, roomId, user }) {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="flex-1 p-2 border rounded"
+          className="flex-1 p-2 border dark:border-gray-600 rounded dark:bg-gray-900 dark:text-white transition-colors duration-300"
           placeholder="Send a message..."
         />
-        <button onClick={send} className="px-3 py-2 bg-purple-600 text-white rounded">
+        <button onClick={send} className="px-3 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded transition-colors duration-300">
           Send
         </button>
       </div>

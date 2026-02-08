@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tldraw/tldraw.css";
 
+@variant dark (&:where(.dark, .dark *));
+
 /* index.css */
 body {
   /* Hide the native cursor; we'll draw our own */

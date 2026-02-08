@@ -5,16 +5,23 @@ import SideChat from './SideChat'
 import ConnectionStatus from './ConnectionStatus'
 import OnlineUsers from './OnlineUsers'
 import { io } from 'socket.io-client'
+import { useNavigate } from 'react-router-dom'
 
 const SERVER = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 
 function getUser() {
   let name = localStorage.getItem('ds_user')
+  let avatar = localStorage.getItem('ds_avatar')
   if (!name) {
     name = `User-${Math.floor(Math.random() * 900 + 100)}`
     localStorage.setItem('ds_user', name)
   }
-  return { name }
+  if (!avatar) {
+    // Default avatar if none selected
+    avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
+    localStorage.setItem('ds_avatar', avatar)
+  }
+  return { name, avatar }
 }
 
 export default function BasicExample() {
@@ -22,6 +29,7 @@ export default function BasicExample() {
   const [socketConnected, setSocketConnected] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
+  const navigate = useNavigate()
   
   // Simple room id from URL (?room=xyz). Defaults to 'default'
   const roomId = useMemo(() => new URLSearchParams(window.location.search).get('room') || 'default', [])
@@ -92,7 +100,7 @@ export default function BasicExample() {
       console.log('BasicExample: Socket connected, joining room', roomId) // DEBUG
       setSocketConnected(true)
       // join after connect so socket.id is available on server
-      s.emit('join-room', roomId, { id: s.id, name: user.name })
+      s.emit('join-room', roomId, { id: s.id, name: user.name, avatar: user.avatar })
       
       // Send join message to chat
       const joinMessage = {
@@ -188,7 +196,7 @@ export default function BasicExample() {
 
     const message = {
       id: Date.now().toString(),
-      author: { id: s.id, name: user.name },
+      author: { id: s.id, name: user.name, avatar: user.avatar },
       text: text.trim(),
       timestamp: new Date()
     }
@@ -223,7 +231,7 @@ export default function BasicExample() {
         socketRef.current?.disconnect()
         
         // Navigate back to home or room selection
-        window.location.href = '/room-entry'
+        navigate('/room-entry')
       }, 100)
     }
   }
@@ -270,8 +278,8 @@ export default function BasicExample() {
       )}
       {/* Overlay panel on small screens */}
       {open && (
-        <div className="sm:hidden absolute inset-0 bg-black/20">
-          <div className="ml-auto h-full w-11/12 max-w-sm bg-white shadow-xl">
+        <div className="sm:hidden absolute inset-0 bg-black/20 dark:bg-black/50 transition-colors duration-300">
+          <div className="ml-auto h-full w-11/12 max-w-sm bg-white dark:bg-gray-800 shadow-xl transition-colors duration-300">
             <SideChat 
               roomId={roomId} 
               socket={socketRef} 
@@ -289,7 +297,7 @@ export default function BasicExample() {
       {/* Chat toggle button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed right-6 bottom-6 z-[100] rounded-lg bg-white/90 backdrop-blur text-purple-600 shadow-lg px-3 py-2 text-sm font-medium hover:bg-white border border-purple-200 transition-all duration-200"
+        className="fixed right-6 bottom-6 z-[100] rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur text-purple-600 dark:text-purple-400 shadow-lg px-3 py-2 text-sm font-medium hover:bg-white dark:hover:bg-gray-700 border border-purple-200 dark:border-purple-700 transition-all duration-200"
         style={{ zIndex: 9999 }}
         title={open ? 'Close Chat' : 'Open Chat'}
       >

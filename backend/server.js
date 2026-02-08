@@ -3,16 +3,32 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
+import session from "express-session";
 import connectDB from "./config/database.js";
 import Room from "./models/Room.js";
 import ChatMessage from "./models/ChatMessage.js";
 import User from "./models/User.js";
+import passport from "./config/passport.js";
+import authRoutes from "./routes/auth.js";
+import oauthRoutes from "./routes/oauth.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
 
 // Connect to MongoDB
 connectDB();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads', 'avatars');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -21,11 +37,26 @@ const io = new Server(server, { cors: { origin: "*" } });
 // Middleware
 app.use(express.json());
 
+// Session middleware (required for passport)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Add CORS middleware for API requests
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -34,6 +65,10 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 4000;
+
+// Authentication Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/oauth', oauthRoutes);
 
 // REST API Routes
 // Health check endpoint
@@ -197,6 +232,7 @@ io.on("connection", (socket) => {
           socketId: socket.id,
           userId: socket.data.user.id,
           name: socket.data.user.name,
+          avatar: socket.data.user.avatar,
           lastActive: new Date(),
           currentRoom: roomId
         },
@@ -236,6 +272,7 @@ io.on("connection", (socket) => {
           usersInRoom.push({
             id: socketId,
             name: socketInstance.data.user.name,
+            avatar: socketInstance.data.user.avatar,
             joinedAt: new Date()
           })
           console.log(`[presence] Added user: ${socketInstance.data.user.name} (${socketId})`)

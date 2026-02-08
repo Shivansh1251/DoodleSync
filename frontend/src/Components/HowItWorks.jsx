@@ -7,12 +7,12 @@ export default function HowItWorks() {
   ]
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">How it works</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white text-center transition-colors duration-300">How it works</h2>
       <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {steps.map((s) => (
-          <div key={s.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-900">{s.title}</h3>
-            <p className="mt-2 text-sm text-gray-600">{s.desc}</p>
+          <div key={s.title} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm transition-colors duration-300">
+            <h3 className="font-semibold text-gray-900 dark:text-white transition-colors duration-300">{s.title}</h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">{s.desc}</p>
           </div>
         ))}
       </div>

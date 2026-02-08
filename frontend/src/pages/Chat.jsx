@@ -34,25 +34,25 @@ export default function Chat() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10 cursor-auto">
       <div className="mb-4 sm:mb-6 flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white transition-colors duration-300">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-purple-600">Chat</span>
         </h1>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
+        <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
           <span className="w-2 h-2 rounded-full bg-green-500" /> Online
         </div>
       </div>
-      <div ref={listRef} className="border rounded-xl h-[60vh] sm:h-[65vh] overflow-y-auto p-3 sm:p-4 bg-white shadow-sm">
+      <div ref={listRef} className="border dark:border-gray-700 rounded-xl h-[60vh] sm:h-[65vh] overflow-y-auto p-3 sm:p-4 bg-white dark:bg-gray-800 shadow-sm transition-colors duration-300">
         {messages.map((m) => (
           <div key={m.id} className={`my-2 flex ${m.from === 'me' ? 'justify-end' : (m.from === 'system' ? 'justify-center' : 'justify-start')}`}>
             {m.from === 'system' ? (
-              <div className="px-3 py-1.5 rounded-full text-xs bg-gray-100 text-gray-600">
+              <div className="px-3 py-1.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors duration-300">
                 {m.text}
               </div>
             ) : (
-              <div className={`max-w-[80%] sm:max-w-[70%] px-3 py-2 rounded-2xl text-sm shadow ${m.from === 'me' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm'}`}>
+              <div className={`max-w-[80%] sm:max-w-[70%] px-3 py-2 rounded-2xl text-sm shadow transition-colors duration-300 ${m.from === 'me' ? 'bg-blue-600 dark:bg-blue-500 text-white rounded-tr-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm'}`}>
                 <div className="flex items-end gap-2">
                   <span className="block leading-relaxed">{m.text}</span>
-                  <span className={`text-[10px] opacity-70 whitespace-nowrap ${m.from === 'me' ? 'text-white' : 'text-gray-600'}`}>{formatTime(m.ts)}</span>
+                  <span className={`text-[10px] opacity-70 whitespace-nowrap ${m.from === 'me' ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>{formatTime(m.ts)}</span>
                 </div>
               </div>
             )}
@@ -61,12 +61,12 @@ export default function Chat() {
       </div>
       <form onSubmit={send} className="mt-4 flex gap-2">
         <input
-          className="flex-1 border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text"
+          className="flex-1 border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text dark:bg-gray-900 dark:text-white transition-colors duration-300"
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button className="px-4 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:opacity-95 shadow">
+        <button className="px-4 py-2 rounded-md bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:opacity-95 shadow transition-opacity duration-300">
           Send
         </button>
       </form>

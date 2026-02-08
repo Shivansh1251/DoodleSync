@@ -6,10 +6,10 @@ export default function MainPage() {
   return (
     <main className="relative">
       <section className="mx-auto max-w-5xl px-6 py-20 text-center">
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white transition-colors duration-300">
           Free Online Whiteboard Tool
         </h1>
-        <p className="mt-4 text-lg md:text-xl text-gray-600">
+        <p className="mt-4 text-lg md:text-xl text-gray-600 dark:text-gray-300 transition-colors duration-300">
           DoodleSync Whiteboards gives you infinite space to collaborate. Brainstorm, run a strategy session, or plan out a project. It's never been easier — or more fun — to work together. Capture your team’s best ideas and turn them into action plans in an instant with AI tools.
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
@@ -17,7 +17,7 @@ export default function MainPage() {
             href="/board"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-3 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-6 py-3 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors duration-300"
           >
             Start a whiteboard
           </a>

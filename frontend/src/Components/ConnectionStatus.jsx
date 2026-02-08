@@ -56,9 +56,9 @@ export default function ConnectionStatus({ socket }) {
   return (
     <div className="flex items-center gap-2 text-xs">
       <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
-      <span className="text-gray-600">{getStatusText()}</span>
+      <span className="text-gray-600 dark:text-gray-300 transition-colors duration-300">{getStatusText()}</span>
       {lastCheck && (
-        <span className="text-gray-400">
+        <span className="text-gray-400 dark:text-gray-500 transition-colors duration-300">
           • Last check: {lastCheck.toLocaleTimeString()}
         </span>
       )}

@@ -6,14 +6,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Documentation files (generated)
 CHAT_DEBUG_GUIDE.md
 CHAT_FIXED_SUMMARY.md
-CONNECTION_TEST.md
 CONNECTION_TEST.md
 MONGODB_SETUP.md
 FRONTEND_CONNECTION_STATUS.md
 ROOMS_CHAT_FIXES.md
 UI_FIXES_SUMMARY.md
+AUTH_SETUP.md
+AUTHENTICATION_SUMMARY.md
+QUICK_START.md
+IMPLEMENTATION_OVERVIEW.md
+EMAIL_SETUP_GUIDE.md
+EMAIL_OTP_IMPLEMENTATION.md
 
 # Runtime data
 pids
@@ -72,6 +78,7 @@ jspm_packages/
 
 # dotenv environment variable files
 .env
+.env.example
 .env.development.local
 .env.test.local
 .env.production.local

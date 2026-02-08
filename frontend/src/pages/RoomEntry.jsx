@@ -1,13 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ApiService from '../utils/ApiService'
+import { useAuth } from '../context/AuthContext'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+
+const AVATARS = [
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zack',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Midnight',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Shadow',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Max',
+]
 
 export default function RoomEntry() {
+  const { user, isAuthenticated } = useAuth()
   const [mode, setMode] = useState('public')
   const [roomId, setRoomId] = useState('')
   const [name, setName] = useState('')
+  const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0])
   const [admin, setAdmin] = useState(false)
   const [existingRooms, setExistingRooms] = useState([])
   const [showExistingRooms, setShowExistingRooms] = useState(false)
@@ -15,10 +30,32 @@ export default function RoomEntry() {
   const [apiError, setApiError] = useState(null)
   const navigate = useNavigate()
 
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return null
+    if (avatar.startsWith('http')) return avatar
+    return `${API_URL.replace('/api', '')}${avatar}`
+  }
+
   // Load existing rooms when component mounts
   useEffect(() => {
     loadExistingRooms()
-  }, [])
+    
+    // Auto-fill from authenticated user
+    if (isAuthenticated && user) {
+      setName(user.name)
+      // If user has a custom avatar from OAuth or upload, use it
+      if (user.avatar) {
+        const avatarUrl = getAvatarUrl(user.avatar)
+        setSelectedAvatar(avatarUrl)
+      }
+    } else {
+      // Try to load saved name and avatar from localStorage
+      const savedName = localStorage.getItem('ds_user')
+      if (savedName) setName(savedName)
+      const savedAvatar = localStorage.getItem('ds_avatar')
+      if (savedAvatar && AVATARS.includes(savedAvatar)) setSelectedAvatar(savedAvatar)
+    }
+  }, [isAuthenticated, user])
 
   const loadExistingRooms = async () => {
     setLoadingRooms(true)
@@ -69,6 +106,7 @@ export default function RoomEntry() {
     }
     if (!id) return alert('Room ID required')
     localStorage.setItem('ds_user', name.trim())
+    localStorage.setItem('ds_avatar', selectedAvatar)
     if (isAdmin) localStorage.setItem('ds_admin', '1')
     else localStorage.removeItem('ds_admin')
     navigate(`/board?room=${id}`)
@@ -77,6 +115,7 @@ export default function RoomEntry() {
   const joinExistingRoom = (roomId) => {
     if (!name.trim()) return alert('Please enter your name first')
     localStorage.setItem('ds_user', name.trim())
+    localStorage.setItem('ds_avatar', selectedAvatar)
     navigate(`/board?room=${roomId}`)
   }
 
@@ -107,6 +146,7 @@ export default function RoomEntry() {
       console.log('Test room created:', result)
       
       localStorage.setItem('ds_user', name.trim())
+      localStorage.setItem('ds_avatar', selectedAvatar)
       navigate(`/board?room=${result.roomId}`)
       
       // Refresh the rooms list to show the new room
@@ -119,31 +159,31 @@ export default function RoomEntry() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-pink-100 p-4">
-      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-center mb-2">Start or Join a Whiteboard Room</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-pink-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-8 w-full max-w-2xl flex flex-col gap-6 transition-colors duration-300">
+        <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white transition-colors duration-300">Start or Join a Whiteboard Room</h2>
         
         {/* Create/Join New Room Section */}
-        <div className="border-b pb-6">
-          <h3 className="text-lg font-semibold mb-4">Create New Room</h3>
+        <div className="border-b dark:border-gray-700 pb-6 transition-colors duration-300">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Create New Room</h3>
           <div className="flex gap-2 justify-center mb-4 flex-wrap">
             <button 
               type="button" 
-              className={`px-4 py-2 rounded-lg font-semibold text-sm ${mode==='public'?'bg-indigo-600 text-white':'bg-gray-100'}`} 
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-300 ${mode==='public'?'bg-indigo-600 text-white':'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`} 
               onClick={()=>setMode('public')}
             >
               Join Public Room
             </button>
             <button 
               type="button" 
-              className={`px-4 py-2 rounded-lg font-semibold text-sm ${mode==='private'?'bg-purple-600 text-white':'bg-gray-100'}`} 
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-300 ${mode==='private'?'bg-purple-600 text-white':'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`} 
               onClick={()=>setMode('private')}
             >
               Join Private Room
             </button>
             <button 
               type="button" 
-              className={`px-4 py-2 rounded-lg font-semibold text-sm ${mode==='create'?'bg-green-600 text-white':'bg-gray-100'}`} 
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-300 ${mode==='create'?'bg-green-600 text-white':'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`} 
               onClick={()=>setMode('create')}
             >
               Create Private Room
@@ -151,8 +191,29 @@ export default function RoomEntry() {
           </div>
           
           <form onSubmit={handleJoin} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Avatar</label>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {AVATARS.map((avatar, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedAvatar(avatar)}
+                    className={`relative rounded-full p-1 border-2 transition-all ${selectedAvatar === avatar ? 'border-blue-500 scale-110' : 'border-transparent hover:border-gray-300'}`}
+                  >
+                    <img src={avatar} alt={`Avatar ${index + 1}`} className="w-10 h-10 rounded-full bg-gray-100" />
+                    {selectedAvatar === avatar && (
+                      <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <input 
-              className="border rounded-md px-3 py-2" 
+              className="border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-900 dark:text-white transition-colors duration-300" 
               placeholder="Your Name" 
               value={name} 
               onChange={e=>setName(e.target.value)} 
@@ -160,7 +221,7 @@ export default function RoomEntry() {
             />
             {(mode==='private') && (
               <input 
-                className="border rounded-md px-3 py-2" 
+                className="border dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-900 dark:text-white transition-colors duration-300" 
                 placeholder="Room ID" 
                 value={roomId} 
                 onChange={e=>setRoomId(e.target.value)} 
@@ -169,7 +230,7 @@ export default function RoomEntry() {
             )}
             <button 
               type="submit" 
-              className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:opacity-90"
+              className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:opacity-90 transition-opacity duration-300"
             >
               {mode==='public'?'Join Public Room':mode==='private'?'Join Private Room':'Create Private Room'}
             </button>
@@ -180,24 +241,24 @@ export default function RoomEntry() {
         {(mode === 'public' || mode === 'private') && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Existing Rooms</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-300">Existing Rooms</h3>
               <div className="flex gap-2">
                 <button
                   onClick={createTestRoom}
-                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                  className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors duration-300"
                   title="Create a test room (will appear here after you use it)"
                 >
                   Test Room
                 </button>
                 <button
                   onClick={loadExistingRooms}
-                  className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
                 >
                   Refresh
                 </button>
                 <button
                   onClick={() => setShowExistingRooms(!showExistingRooms)}
-                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors duration-300"
                 >
                   {showExistingRooms ? 'Hide' : 'Show'} ({existingRooms.length})
                 </button>
@@ -208,39 +269,39 @@ export default function RoomEntry() {
             <div className="max-h-60 overflow-y-auto">
               {apiError ? (
                 <div className="text-center py-4">
-                  <div className="text-red-600 text-sm mb-2">{apiError}</div>
-                  <div className="text-xs text-gray-500">Make sure backend server is running on port 4000</div>
+                  <div className="text-red-600 dark:text-red-400 text-sm mb-2 transition-colors duration-300">{apiError}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">Make sure backend server is running on port 4000</div>
                   <button
                     onClick={loadExistingRooms}
-                    className="mt-2 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="mt-2 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-300"
                   >
                     Try Again
                   </button>
                 </div>
               ) : loadingRooms ? (
-                <div className="text-center py-4 text-gray-500">Loading rooms...</div>
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400 transition-colors duration-300">Loading rooms...</div>
               ) : existingRooms.length === 0 ? (
                 <div className="text-center py-4">
-                  <div className="text-gray-500 text-sm mb-2">No existing rooms found</div>
-                  <div className="text-xs text-gray-400">Create a room and it will appear here</div>
+                  <div className="text-gray-500 dark:text-gray-400 text-sm mb-2 transition-colors duration-300">No existing rooms found</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 transition-colors duration-300">Create a room and it will appear here</div>
                 </div>
               ) : (
                 <div className="grid gap-3">
                   {existingRooms.map((room) => (
-                    <div key={room.roomId} className="border rounded-lg p-3 hover:bg-gray-50">
+                    <div key={room.roomId} className="border dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <div className="font-medium text-sm truncate">{room.roomId}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="font-medium text-sm truncate text-gray-900 dark:text-white transition-colors duration-300">{room.roomId}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
                             Created by: {room.createdBy || 'Anonymous'}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
                             Last active: {formatDate(room.lastModified)}
                           </div>
                         </div>
                         <button
                           onClick={() => joinExistingRoom(room.roomId)}
-                          className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                          className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-300"
                         >
                           Join
                         </button>

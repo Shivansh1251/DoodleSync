@@ -62,20 +62,20 @@ export default function ChatDebug({ roomId = 'test-room' }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-4">
+    <div className="max-w-2xl mx-auto p-4 space-y-4 text-gray-900 dark:text-white transition-colors duration-300">
       <h2 className="text-xl font-bold">Chat Debug Console</h2>
       
       <div className="flex items-center gap-2">
         <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
         <span>Status: {connected ? 'Connected' : 'Disconnected'}</span>
-        <span className="text-gray-500">Room: {roomId}</span>
+        <span className="text-gray-500 dark:text-gray-400 transition-colors duration-300">Room: {roomId}</span>
       </div>
 
       {/* Messages */}
-      <div className="border rounded-lg p-4 h-40 overflow-y-auto bg-gray-50">
+      <div className="border dark:border-gray-700 rounded-lg p-4 h-40 overflow-y-auto bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
         <div className="text-sm font-semibold mb-2">Chat Messages:</div>
         {messages.length === 0 ? (
-          <div className="text-gray-500 text-sm">No messages</div>
+          <div className="text-gray-500 dark:text-gray-400 text-sm transition-colors duration-300">No messages</div>
         ) : (
           messages.map((msg, i) => (
             <div key={i} className="text-sm mb-1">
@@ -92,19 +92,19 @@ export default function ChatDebug({ roomId = 'test-room' }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
           placeholder="Type a message..."
-          className="flex-1 border rounded px-3 py-2"
+          className="flex-1 border dark:border-gray-600 rounded px-3 py-2 dark:bg-gray-900 dark:text-white transition-colors duration-300"
         />
         <button
           onClick={sendMessage}
           disabled={!connected}
-          className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400"
+          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors duration-300"
         >
           Send
         </button>
       </div>
 
       {/* Debug Logs */}
-      <div className="border rounded-lg p-4 h-40 overflow-y-auto bg-gray-900 text-green-400 text-xs font-mono">
+      <div className="border dark:border-gray-700 rounded-lg p-4 h-40 overflow-y-auto bg-gray-900 dark:bg-black text-green-400 dark:text-green-300 text-xs font-mono transition-colors duration-300">
         <div className="text-sm font-semibold mb-2 text-white">Debug Logs:</div>
         {logs.map((log, i) => (
           <div key={i}>{log}</div>
