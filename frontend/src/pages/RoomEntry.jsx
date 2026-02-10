@@ -6,15 +6,24 @@ import { useAuth } from '../context/AuthContext'
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
-const AVATARS = [
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zack',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Midnight',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Shadow',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Max',
+const PRESET_AVATARS = [
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_32.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_33.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_34.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_26.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_27.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_28.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_29.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_30.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_16.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_1.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_2.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_3.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_4.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_5.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_6.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_7.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_8.png',
 ]
 
 export default function RoomEntry() {
@@ -22,7 +31,7 @@ export default function RoomEntry() {
   const [mode, setMode] = useState('public')
   const [roomId, setRoomId] = useState('')
   const [name, setName] = useState('')
-  const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0])
+  const [selectedAvatar, setSelectedAvatar] = useState(PRESET_AVATARS[0])
   const [admin, setAdmin] = useState(false)
   const [existingRooms, setExistingRooms] = useState([])
   const [showExistingRooms, setShowExistingRooms] = useState(false)
@@ -53,7 +62,7 @@ export default function RoomEntry() {
       const savedName = localStorage.getItem('ds_user')
       if (savedName) setName(savedName)
       const savedAvatar = localStorage.getItem('ds_avatar')
-      if (savedAvatar && AVATARS.includes(savedAvatar)) setSelectedAvatar(savedAvatar)
+      if (savedAvatar && PRESET_AVATARS.includes(savedAvatar)) setSelectedAvatar(savedAvatar)
     }
   }, [isAuthenticated, user])
 
@@ -192,19 +201,29 @@ export default function RoomEntry() {
           
           <form onSubmit={handleJoin} className="flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Avatar</label>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {AVATARS.map((avatar, index) => (
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Select Avatar</label>
+              <div className="flex gap-4 overflow-x-auto py-3 px-2 pb-5 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                {PRESET_AVATARS.map((avatar, index) => (
                   <button
                     key={index}
                     type="button"
                     onClick={() => setSelectedAvatar(avatar)}
-                    className={`relative rounded-full p-1 border-2 transition-all ${selectedAvatar === avatar ? 'border-blue-500 scale-110' : 'border-transparent hover:border-gray-300'}`}
+                    className={`relative flex-shrink-0 rounded-full transition-all duration-300 ${
+                      selectedAvatar === avatar 
+                        ? 'ring-4 ring-purple-500 scale-110 shadow-lg' 
+                        : 'ring-2 ring-gray-300 dark:ring-gray-600 hover:ring-purple-400 hover:scale-105'
+                    }`}
                   >
-                    <img src={avatar} alt={`Avatar ${index + 1}`} className="w-10 h-10 rounded-full bg-gray-100" />
+                    <img 
+                      src={avatar} 
+                      alt={`Avatar ${index + 1}`} 
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
                     {selectedAvatar === avatar && (
-                      <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-0.5">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                      <div className="absolute -bottom-1 -right-1 bg-purple-600 text-white rounded-full p-1 shadow-md">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                        </svg>
                       </div>
                     )}
                   </button>

@@ -228,6 +228,31 @@ class AuthService {
     return data;
   }
 
+  // Set preset avatar
+  async setPresetAvatar(avatarUrl) {
+    const token = this.getToken();
+
+    const response = await fetch(`${API_URL}/auth/avatar/preset`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ avatarUrl })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to set avatar');
+    }
+
+    const user = this.getUser();
+    user.avatar = data.avatar;
+    this.setUser(user);
+    return data;
+  }
+
   // Forgot password - request OTP
   async forgotPassword(email) {
     const response = await fetch(`${API_URL}/auth/forgot-password`, {

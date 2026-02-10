@@ -324,6 +324,34 @@ router.post('/avatar', authenticateToken, upload.single('avatar'), async (req, r
   }
 });
 
+// SET PRESET AVATAR
+router.post('/avatar/preset', authenticateToken, async (req, res) => {
+  try {
+    const { avatarUrl } = req.body;
+    
+    if (!avatarUrl) {
+      return res.status(400).json({ error: 'Avatar URL is required' });
+    }
+
+    const user = req.user;
+    if (user.isGuest) {
+      return res.status(403).json({ error: 'Guests cannot set avatars' });
+    }
+
+    // Save avatar URL
+    user.avatar = avatarUrl;
+    await user.save();
+
+    res.json({
+      message: 'Avatar updated successfully',
+      avatar: user.avatar
+    });
+  } catch (error) {
+    console.error('Avatar preset error:', error);
+    res.status(500).json({ error: 'Failed to set avatar' });
+  }
+});
+
 // FORGOT PASSWORD - REQUEST OTP
 router.post('/forgot-password', async (req, res) => {
   try {

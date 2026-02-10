@@ -70,6 +70,13 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const setPresetAvatar = async (avatarUrl) => {
+    const data = await AuthService.setPresetAvatar(avatarUrl);
+    const updatedUser = { ...user, avatar: data.avatar };
+    setUser(updatedUser);
+    return data;
+  };
+
   const value = {
     user,
     loading,
@@ -80,7 +87,8 @@ export const AuthProvider = ({ children }) => {
     guestLogin,
     logout,
     updateProfile,
-    uploadAvatar
+    uploadAvatar,
+    setPresetAvatar
   };
 
   return (

@@ -5,56 +5,42 @@ export default function FeatureGrid() {
       title: 'Draw',
       desc: 'Sketch, doodle, and draw with our free online drawing app.',
       href: '/board',
-      swatch: 'from-blue-50 to-indigo-50',
-      icon: '✏️',
-    },
-    {
-      key: 'mindmaps',
-      title: 'Mind Maps',
-      desc: 'Boost ideas and learning with our collaborative mind map maker.',
-      href: '/board',
-      swatch: 'from-emerald-50 to-teal-50',
-      icon: '🧠',
+      swatch: 'from-blue-50 to-indigo-100',
+      image: '/afb68fd4-3068-4b06-8fca-dae745f906b1.png',
     },
     {
       key: 'flowcharts',
       title: 'Flowcharts',
       desc: 'Visualize processes and ideas with flowchart shapes and connectors.',
       href: '/board',
-      swatch: 'from-amber-50 to-orange-50',
-      icon: '🔀',
-    },
-    {
-      key: 'wireframes',
-      title: 'Wireframes',
-      desc: 'Rough out product screens fast with boxes, text, and arrows.',
-      href: '/board',
-      swatch: 'from-slate-50 to-gray-50',
-      icon: '📐',
+      swatch: 'from-orange-50 to-amber-100',
+      image: '/6874e087d180d96e9c429fd2_tldraw-asset.png',
     },
     {
       key: 'stickies',
       title: 'Sticky Notes',
       desc: 'Capture ideas with sticky notes and color tags on an infinite canvas.',
       href: '/board',
-      swatch: 'from-yellow-50 to-lime-50',
-      icon: '🗒️',
+      swatch: 'from-yellow-50 to-amber-100',
+      image: '/sticky-notes-hero.png',
     },
     {
       key: 'chat',
       title: 'Real-time Chat',
       desc: 'Chat while you sketch to keep everyone in sync.',
       href: '/chat',
-      swatch: 'from-fuchsia-50 to-pink-50',
-      icon: '💬',
+      swatch: 'from-purple-50 to-pink-100',
+      image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&h=400&fit=crop&q=85',
     },
   ]
 
   return (
-    <section className="mx-auto max-w-6xl px-6 pt-4 pb-16">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Create a whiteboard</h2>
-        <p className="mt-3 text-gray-600 dark:text-gray-300 max-w-3xl mx-auto transition-colors duration-300">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
+          Everything You Need to Create
+        </h2>
+        <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto transition-colors duration-300">
           Start transforming your ideas into interactive visuals that engage audiences across various platforms—from widescreens to mobile devices.
         </p>
       </div>
@@ -63,23 +49,33 @@ export default function FeatureGrid() {
           <a
             key={f.key}
             href={f.href}
-            className="group rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+            className="group relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden"
             target={f.href === '/board' ? '_blank' : undefined}
             rel={f.href === '/board' ? 'noopener noreferrer' : undefined}
           >
-            <div className={`h-40 w-full bg-gradient-to-br ${f.swatch} flex items-center justify-center`}>
-              <div className="text-4xl drop-shadow-sm">{f.icon}</div>
+            {/* Image Header */}
+            <div className={`relative h-48 w-full bg-gradient-to-br ${f.swatch} overflow-hidden`}>
+              <img 
+                src={f.image} 
+                alt={f.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-500"
+              />
+              {/* Subtle gradient overlay for better text readability on hover */}
+              <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
             </div>
-            <div className="p-5">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">{f.title}</h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm transition-colors duration-300">{f.desc}</p>
-              <div className="mt-4">
-                <span className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 font-medium transition-colors duration-300">
-                  {f.href === '/chat' ? 'Open chat' : 'Start template'}
-                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h9.586L10.293 5.707a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 11-1.414-1.414L13.586 11H4a1 1 0 01-1-1z" clipRule="evenodd"/></svg>
-                </span>
-              </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">
+                {f.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed transition-colors duration-300">
+                {f.desc}
+              </p>
             </div>
+
+            {/* Hover Border Effect */}
+            <div className="absolute inset-0 rounded-2xl border-2 border-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           </a>
         ))}
       </div>

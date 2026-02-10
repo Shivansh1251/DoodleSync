@@ -8,6 +8,11 @@ Collaborative online whiteboard and chat app for teams, classrooms, and friends.
 - **Room System**: Create public or private rooms, invite others, and manage access.
 - **Admin Controls**: Private room creators become admins and can share room IDs.
 - **Presence & Activity**: See who's online, who's drawing, and who's typing.
+- **Template Gallery**: Choose from pre-designed templates for brainstorming, planning, design, and more.
+- **Help Center**: Comprehensive guides, FAQs, and keyboard shortcuts to get you started quickly.
+- **User Authentication**: Sign up with email or Google OAuth, or continue as a guest.
+- **Modern UI**: Beautiful gradient designs, animations, and dark mode support.
+- **Responsive**: Works seamlessly on desktop, tablet, and mobile devices.
 - **Responsive UI**: Works on desktop and mobile, with overlay chat on small screens.
 
 ## Getting Started
@@ -46,16 +51,20 @@ Collaborative online whiteboard and chat app for teams, classrooms, and friends.
 
 ## Usage
 - **Home Page**: Click "Start your whiteboard" to join or create a room.
+- **Templates**: Browse the template gallery and choose a pre-designed template for your use case.
+- **Help Center**: Access guides, tutorials, keyboard shortcuts, and FAQs.
 - **Room Entry**: Enter your name, choose public/private, or create a private room (admin).
 - **Board**: Draw, chat, and collaborate. Room ID is shown in chat for sharing.
 - **Presence**: See who is online and their activity (drawing/writing).
 
 ## Tech Stack
-- React + Vite
-- Tldraw (whiteboard)
-- Socket.IO (real-time backend)
-- Tailwind CSS (styling)
-- Express (backend server)
+- **Frontend**: React + Vite
+- **Whiteboard**: Tldraw
+- **Real-time**: Socket.IO
+- **Styling**: Tailwind CSS
+- **Backend**: Node.js + Express
+- **Database**: MongoDB
+- **Authentication**: JWT + Passport.js (Google OAuth)
 
 ## Contributing
 Pull requests welcome! For major changes, open an issue first to discuss what you’d like to change.

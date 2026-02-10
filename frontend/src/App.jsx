@@ -13,6 +13,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import OAuthCallback from './pages/OAuthCallback'
 import UserProfile from './pages/UserProfile'
+import Templates from './pages/Templates'
+import Help from './pages/Help'
 // import Whiteboard from './Components/Whiteboard'
 
 function App() {
@@ -32,6 +34,8 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/templates" element={<Templates />} />
+          <Route path="/help" element={<Help />} />
           {/* Redirect /main to home page */}
           <Route path="/main" element={<Navigate to="/" replace />} />
           <Route path="/chat" element={<Chat />} />

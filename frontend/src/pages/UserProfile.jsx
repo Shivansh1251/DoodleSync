@@ -3,12 +3,33 @@ import { useAuth } from '../context/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthService from '../utils/AuthService'
 
+const PRESET_AVATARS = [
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_32.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_33.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_34.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_26.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_27.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_28.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_29.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_30.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_16.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_1.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_2.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_3.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_4.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_5.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_6.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_7.png',
+  'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_8.png',
+]
+
 export default function UserProfile() {
-  const { user, logout, updateProfile, uploadAvatar } = useAuth()
+  const { user, logout, updateProfile, uploadAvatar, setPresetAvatar } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
   
   const [editing, setEditing] = useState(false)
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [form, setForm] = useState({
     name: user?.name || '',
     bio: user?.bio || '',
@@ -77,6 +98,22 @@ export default function UserProfile() {
     }
   }
 
+  const handlePresetAvatarSelect = async (avatarUrl) => {
+    setLoading(true)
+    setError('')
+    setMessage('')
+
+    try {
+      await setPresetAvatar(avatarUrl)
+      setMessage('Avatar updated successfully')
+      setShowAvatarPicker(false)
+    } catch (err) {
+      setError(err.message || 'Failed to set avatar')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleLogout = async () => {
     await logout()
     navigate('/login')
@@ -108,31 +145,42 @@ export default function UserProfile() {
           
           {/* Profile Section */}
           <div className="px-6 pb-6">
-            <div className="flex items-start -mt-16 mb-4">
+            <div className="flex items-start -mt-16 mb-6">
               <div className="relative">
                 {user.avatar ? (
                   <img
                     src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'}${user.avatar}`}
                     alt={user.name}
-                    className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 object-cover"
+                    className="w-36 h-36 rounded-full border-4 border-white dark:border-gray-800 object-cover shadow-2xl ring-4 ring-purple-500/30 hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 bg-purple-600 flex items-center justify-center text-white text-4xl font-bold">
+                  <div className="w-36 h-36 rounded-full border-4 border-white dark:border-gray-800 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white text-5xl font-bold shadow-2xl ring-4 ring-purple-400/30">
                     {user.name?.[0]?.toUpperCase()}
                   </div>
                 )}
                 {!user.isGuest && (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-colors disabled:opacity-50"
-                    title="Change avatar"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </button>
+                  <div className="absolute bottom-1 right-1 flex gap-2">
+                    <button
+                      onClick={() => setShowAvatarPicker(true)}
+                      disabled={loading}
+                      className="bg-blue-600 text-white p-2.5 rounded-full hover:bg-blue-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-110 ring-4 ring-white dark:ring-gray-800"
+                      title="Choose preset avatar"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={loading}
+                      className="bg-purple-600 text-white p-2.5 rounded-full hover:bg-purple-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl hover:scale-110 ring-4 ring-white dark:ring-gray-800"
+                      title="Upload custom avatar"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    </button>
+                  </div>
                 )}
                 <input
                   ref={fileInputRef}
@@ -142,7 +190,7 @@ export default function UserProfile() {
                   className="hidden"
                 />
               </div>
-              <div className="ml-6 flex-1 mt-16">
+              <div className="ml-8 flex-1 mt-16">
                 <div className="flex items-center justify-between">
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -347,6 +395,85 @@ export default function UserProfile() {
           </Link>
         </div>
       </div>
+
+      {/* Avatar Picker Modal */}
+      {showAvatarPicker && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-md"
+          onClick={() => setShowAvatarPicker(false)}
+        >
+          <div 
+            className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 transition-colors duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowAvatarPicker(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Choose Your Avatar
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Select one of these preset avatars or upload your own
+            </p>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-96 overflow-y-auto">
+              {PRESET_AVATARS.map((avatarUrl, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePresetAvatarSelect(avatarUrl)}
+                  disabled={loading}
+                  className={`relative aspect-square rounded-full overflow-hidden border-4 hover:border-purple-500 transition-all duration-300 hover:scale-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+                    user.avatar === avatarUrl 
+                      ? 'border-purple-600 ring-4 ring-purple-400/50' 
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  <img
+                    src={avatarUrl}
+                    alt={`Avatar ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {user.avatar === avatarUrl && (
+                    <div className="absolute inset-0 bg-purple-600/20 flex items-center justify-center">
+                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  setShowAvatarPicker(false)
+                  fileInputRef.current?.click()
+                }}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload Custom Avatar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

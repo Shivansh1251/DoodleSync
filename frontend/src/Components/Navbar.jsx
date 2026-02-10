@@ -35,8 +35,8 @@ export default function Navbar() {
           {/* Center Links */}
           <ul className="hidden md:flex gap-4 text-gray-700 dark:text-gray-200 font-medium text-sm">
             <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-400">Design</Link></li>
-            <li><a href="#templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</a></li>
-            <li><Link to="/" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
+            <li><Link to="/templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</Link></li>
+            <li><Link to="/help" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
           </ul>
 
           {/* Right Buttons */}
@@ -61,20 +61,20 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover:shadow-md"
                 >
                   {user.avatar ? (
                     <img
                       src={getAvatarUrl(user.avatar)}
                       alt={user.name}
-                      className="w-7 h-7 rounded-full object-cover border-2 border-purple-500"
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-purple-500 shadow-lg hover:ring-purple-400 transition-all duration-300"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm border-2 border-purple-500">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-purple-400 shadow-lg">
                       {user.name?.[0]?.toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[100px] truncate">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
                     {user.name}
                   </span>
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,16 +160,16 @@ export default function Navbar() {
             {isAuthenticated && user && (
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-2 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
               >
                 {user.avatar ? (
                   <img
                     src={getAvatarUrl(user.avatar)}
                     alt={user.name}
-                    className="w-7 h-7 rounded-full object-cover border-2 border-purple-500"
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-purple-500 shadow-lg"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm border-2 border-purple-500">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-purple-400 shadow-lg">
                     {user.name?.[0]?.toUpperCase()}
                   </div>
                 )}
@@ -187,16 +187,16 @@ export default function Navbar() {
         {open && (
           <div className="md:hidden mt-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-3 transition-colors duration-300">
             {isAuthenticated && user && (
-              <div className="pb-3 mb-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
+              <div className="pb-4 mb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-4">
                   {user.avatar ? (
                     <img
                       src={getAvatarUrl(user.avatar)}
                       alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-purple-500"
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-purple-500 shadow-lg"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold border-2 border-purple-500">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg ring-2 ring-purple-400 shadow-lg">
                       {user.name?.[0]?.toUpperCase()}
                     </div>
                   )}
@@ -215,8 +215,8 @@ export default function Navbar() {
             )}
             <ul className="flex flex-col gap-2 text-gray-700 dark:text-gray-200 font-medium text-sm">
               <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-400">Design</Link></li>
-              <li><a href="#templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</a></li>
-              <li><Link to="/" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
+              <li><Link to="/templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</Link></li>
+              <li><Link to="/help" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
             </ul>
             {isAuthenticated && user ? (
               <div className="mt-3 flex flex-col gap-2">

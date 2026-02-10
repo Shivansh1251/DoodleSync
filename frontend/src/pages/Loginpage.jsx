@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from '../context/AuthContext'
 import AuthService from '../utils/AuthService'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -13,6 +14,9 @@ export default function Login() {
   const [useOTP, setUseOTP] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showGuestForm, setShowGuestForm] = useState(false)
+  const [guestName, setGuestName] = useState('')
 
   const onChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -54,11 +58,16 @@ export default function Login() {
     AuthService.initiateGoogleLogin()
   }
 
-  const handleGuestLogin = async () => {
+  const handleGuestLogin = async (e) => {
+    e.preventDefault()
+    if (!guestName.trim()) {
+      setError('Please enter your name')
+      return
+    }
     try {
       setLoading(true)
       setError('')
-      await guestLogin()
+      await guestLogin(guestName.trim())
       navigate('/room-entry')
     } catch (err) {
       setError(err.message || 'Failed to create guest session')
@@ -67,7 +76,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      {!showGuestForm ? (
       <form onSubmit={onSubmit} className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 transition-colors duration-300">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Log in</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Welcome back to DoodleSync.</p>
@@ -96,16 +106,25 @@ export default function Login() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Password</label>
-                <input 
-                  type="password" 
-                  name="password" 
-                  value={form.password} 
-                  onChange={onChange} 
-                  required 
-                  disabled={loading}
-                  className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-                  placeholder="••••••••" 
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    name="password" 
+                    value={form.password} 
+                    onChange={onChange} 
+                    required 
+                    disabled={loading}
+                    className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
+                    placeholder="Enter your password" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -209,7 +228,7 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={handleGuestLogin}
+            onClick={() => setShowGuestForm(true)}
             disabled={loading}
             className="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 disabled:opacity-50"
           >
@@ -221,6 +240,58 @@ export default function Login() {
           No account? <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition-colors duration-300">Sign up</Link>
         </p>
       </form>
+      ) : (
+        <form onSubmit={handleGuestLogin} className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 transition-colors duration-300">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Continue as Guest</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Enter your name to join as a guest user.</p>
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Your Name</label>
+            <input 
+              type="text"
+              value={guestName} 
+              onChange={(e) => {
+                setGuestName(e.target.value)
+                setError('')
+              }}
+              required 
+              disabled={loading}
+              className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
+              placeholder="Enter your name" 
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading || !guestName.trim()}
+            className="mt-6 w-full px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating session...' : 'Continue as Guest'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowGuestForm(false)
+              setGuestName('')
+              setError('')
+            }}
+            className="mt-3 w-full text-gray-600 dark:text-gray-400 text-sm hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            ← Back to login
+          </button>
+
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300 text-center">
+            Want a full account? <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition-colors duration-300">Sign up</Link>
+          </p>
+        </form>
+      )}
     </div>
   )
 }

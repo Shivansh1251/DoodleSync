@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AuthService from '../utils/AuthService'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -9,6 +10,8 @@ export default function Signup() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const onChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -47,7 +50,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
       <form onSubmit={onSubmit} className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 transition-colors duration-300">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Create your account</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Start collaborating in seconds.</p>
@@ -68,7 +71,7 @@ export default function Signup() {
               required 
               disabled={loading}
               className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-              placeholder="Jane Doe" 
+              placeholder="Enter your full name" 
             />
           </div>
           <div>
@@ -86,31 +89,49 @@ export default function Signup() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Password</label>
-            <input 
-              type="password" 
-              name="password" 
-              value={form.password} 
-              onChange={onChange} 
-              required 
-              minLength={6} 
-              disabled={loading}
-              className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-              placeholder="••••••••" 
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"}
+                name="password" 
+                value={form.password} 
+                onChange={onChange} 
+                required 
+                minLength={6} 
+                disabled={loading}
+                className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
+                placeholder="At least 6 characters" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Confirm Password</label>
-            <input 
-              type="password" 
-              name="confirmPassword" 
-              value={form.confirmPassword} 
-              onChange={onChange} 
-              required 
-              minLength={6} 
-              disabled={loading}
-              className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-              placeholder="••••••••" 
-            />
+            <div className="relative">
+              <input 
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword" 
+                value={form.confirmPassword} 
+                onChange={onChange} 
+                required 
+                minLength={6} 
+                disabled={loading}
+                className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
+                placeholder="Re-enter your password" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
         </div>
 
