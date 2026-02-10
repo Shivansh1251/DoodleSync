@@ -112,7 +112,7 @@ export default function UserProfile() {
               <div className="relative">
                 {user.avatar ? (
                   <img
-                    src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:4000${user.avatar}`}
+                    src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'}${user.avatar}`}
                     alt={user.name}
                     className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 object-cover"
                   />

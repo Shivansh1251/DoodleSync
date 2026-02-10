@@ -20,6 +20,7 @@ QUICK_START.md
 IMPLEMENTATION_OVERVIEW.md
 EMAIL_SETUP_GUIDE.md
 EMAIL_OTP_IMPLEMENTATION.md
+DEPLOYMENT_GUIDE.md
 
 # Runtime data
 pids
@@ -273,3 +274,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+DEPLOYMENT_GUIDE.md
