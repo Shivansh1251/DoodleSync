@@ -29,6 +29,7 @@ export default function BasicExample() {
   const [socketConnected, setSocketConnected] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
+  const [copied, setCopied] = useState(false)
   const navigate = useNavigate()
   
   // Simple room id from URL (?room=xyz). Defaults to 'default'
@@ -205,34 +206,41 @@ export default function BasicExample() {
     s.emit('chat-message', roomId, message)
   }
 
-  // Function to leave room
+  // Function to copy room ID to clipboard
+  const copyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(roomId)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy room ID:', err)
+    }
+  }
+
+  // Function to leave room properly
   const leaveRoom = () => {
     if (confirm('Are you sure you want to leave this room?')) {
-      // Send leave message to chat
       const s = socketRef.current
       if (s?.connected) {
-        const leaveMessage = {
-          id: Date.now().toString(),
-          author: { id: 'system', name: 'System' },
-          text: `${user.name} has left the room`,
-          timestamp: new Date(),
-          isSystemMessage: true
-        }
-        s.emit('chat-message', roomId, leaveMessage)
-      }
-      
-      // Small delay to ensure leave message is sent
-      setTimeout(() => {
-        // Clear localStorage for this room
-        const storageKey = `tldraw-doc-${roomId}`
-        localStorage.removeItem(storageKey)
+        // Emit leave-room event - server will handle chat message and notifications
+        s.emit('leave-room', roomId)
         
-        // Disconnect socket
-        socketRef.current?.disconnect()
-        
-        // Navigate back to home or room selection
+        // Small delay to ensure leave event is processed
+        setTimeout(() => {
+          // Clear localStorage for this room
+          const storageKey = `tldraw-doc-${roomId}`
+          localStorage.removeItem(storageKey)
+          
+          // Disconnect socket
+          s.disconnect()
+          
+          // Navigate back to room selection
+          navigate('/room-entry')
+        }, 200)
+      } else {
+        // If not connected, just navigate away
         navigate('/room-entry')
-      }, 100)
+      }
     }
   }
   let boardContent
@@ -243,11 +251,33 @@ export default function BasicExample() {
   }
   return (
     <div className="w-full h-screen flex relative">
-      {/* Connection Status and Controls - Top Center */}
+      {/* Leave Room Button - Top Center */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-white/95 backdrop-blur rounded-lg px-4 py-2 shadow-lg border">
         <div className="flex items-center gap-4">
-          <ConnectionStatus socket={socketRef} />
-          <div className="text-xs text-gray-600 font-medium">Room: {roomId}</div>
+          {/* <ConnectionStatus socket={socketRef} /> */}
+          <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
+            <span>Room: {roomId}</span>
+            <button
+              onClick={copyRoomId}
+              className="relative p-1 hover:bg-gray-200 rounded transition-colors group"
+              title="Copy Room ID"
+            >
+              {copied ? (
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              )}
+              {copied && (
+                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                  Copied!
+                </span>
+              )}
+            </button>
+          </div>
           <button
             onClick={leaveRoom}
             className="px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"

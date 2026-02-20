@@ -5,10 +5,32 @@ import { io } from "socket.io-client";
 
 const SERVER = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
 
+// Generate consistent color from user ID
+const getUserColor = (userId) => {
+  const colors = [
+    '#ef4444', // red
+    '#f59e0b', // amber
+    '#10b981', // emerald
+    '#3b82f6', // blue
+    '#8b5cf6', // violet
+    '#ec4899', // pink
+    '#14b8a6', // teal
+    '#f97316', // orange
+  ];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export default function Whiteboard({ roomId = "default", user = { id: "u1", name: "Shivansh" } }) {
   const socketRef = useRef(null);
   const editorRef = useRef(null); // will hold tldraw instance
   const [connected, setConnected] = useState(false);
+  const [remoteCursors, setRemoteCursors] = useState({}); // Store other users' cursors
+  const cursorThrottleRef = useRef(null);
+  const userColorRef = useRef(getUserColor(user.id));
 
   useEffect(() => {
     socketRef.current = io(SERVER, { transports: ["websocket"] });
@@ -50,13 +72,66 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
       // Pass to ChatPanel component
     });
 
+    // Handle cursor updates from other users
+    s.on("cursor-update", (cursorData) => {
+      setRemoteCursors(prev => ({
+        ...prev,
+        [cursorData.userId]: {
+          ...cursorData,
+          lastUpdate: Date.now()
+        }
+      }));
+    });
+
+    // Clean up stale cursors every 3 seconds
+    const cursorCleanup = setInterval(() => {
+      const now = Date.now();
+      setRemoteCursors(prev => {
+        const updated = {};
+        Object.entries(prev).forEach(([userId, cursor]) => {
+          // Keep cursor if updated within last 3 seconds
+          if (now - cursor.lastUpdate < 3000) {
+            updated[userId] = cursor;
+          }
+        });
+        return updated;
+      });
+    }, 1000);
+
     // join the room
     s.emit("join-room", roomId, user);
 
     return () => {
+      if (cursorThrottleRef.current) {
+        clearTimeout(cursorThrottleRef.current);
+      }
+      clearInterval(cursorCleanup);
       s.disconnect();
     };
   }, [roomId, user]);
+
+  // Handle mouse movement for cursor tracking
+  const handleMouseMove = (e) => {
+    if (!socketRef.current || !socketRef.current.connected) return;
+
+    // Get canvas bounds
+    const canvas = e.currentTarget;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Throttle cursor updates to 50ms
+    if (!cursorThrottleRef.current) {
+      cursorThrottleRef.current = setTimeout(() => {
+        socketRef.current.emit("cursor-move", roomId, {
+          x,
+          y,
+          color: userColorRef.current
+        });
+        cursorThrottleRef.current = null;
+      }, 50);
+    }
+  };
 
   // This function is called by Tldraw editor whenever the doc changes.
   // You need to wire this via tldraw's onChange or onDocumentChange hook.
@@ -69,27 +144,93 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
 
   return (
     <div className="flex h-screen">
-      <div className="flex-1 bg-white dark:bg-gray-900 transition-colors duration-300">
-        {/* TODO: Replace with the actual Tldraw component API.
-            - You must grab an editor instance or pass onChange props.
-            - Example (pseudocode): <Tldraw onMount={(app) => (editorRef.current = app)} onChange={onEditorChange} />
-         */}
-        <Tldraw
-          onMount={(app) => {
-            // store instance to ref
-            editorRef.current = app;
-            // optionally load local doc or request server doc
-          }}
-          onChange={(state) => {
-            // state is the serialized document from tldraw (depends on tldraw APIs)
-            onEditorChange(state);
-          }}
-        />
+      <div 
+        className="flex-1 bg-white dark:bg-gray-900 transition-colors duration-300 relative"
+        onMouseMove={handleMouseMove}
+      >
+        {/* Tldraw Canvas */}
+        <div className="absolute inset-0">
+          <Tldraw
+            onMount={(app) => {
+              // store instance to ref
+              editorRef.current = app;
+              // optionally load local doc or request server doc
+            }}
+            onChange={(state) => {
+              // state is the serialized document from tldraw (depends on tldraw APIs)
+              onEditorChange(state);
+            }}
+          />
+        </div>
+
+        {/* Remote cursors overlay - must be after Tldraw to appear on top */}
+        <div className="absolute inset-0 pointer-events-none z-50">
+          {Object.entries(remoteCursors).map(([userId, cursor]) => (
+            <RemoteCursor
+              key={userId}
+              x={cursor.x}
+              y={cursor.y}
+              name={cursor.userName}
+              color={cursor.color}
+              avatar={cursor.userAvatar}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Right-side chat */}
       <div className="w-80 border-l dark:border-gray-700 p-4 bg-white dark:bg-gray-800 transition-colors duration-300">
         <ChatPanel socketRef={socketRef} roomId={roomId} user={user} />
+      </div>
+    </div>
+  );
+}
+
+// Remote cursor component
+function RemoteCursor({ x, y, name, color, avatar }) {
+  return (
+    <div
+      className="absolute pointer-events-none z-50 transition-all duration-75"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        transform: 'translate(-50%, -50%)'
+      }}
+    >
+      {/* Cursor pointer */}
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+      >
+        <path
+          d="M5.5 3.5L19.5 12L12 14L9 21.5L5.5 3.5Z"
+          fill={color}
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      {/* User name label */}
+      <div
+        className="absolute left-6 top-0 px-2 py-1 rounded text-white text-xs font-medium whitespace-nowrap shadow-lg"
+        style={{
+          backgroundColor: color,
+          border: '2px solid white'
+        }}
+      >
+        {avatar ? (
+          <div className="flex items-center gap-1">
+            <img src={avatar} alt={name} className="w-4 h-4 rounded-full" />
+            <span>{name}</span>
+          </div>
+        ) : (
+          name
+        )}
       </div>
     </div>
   );

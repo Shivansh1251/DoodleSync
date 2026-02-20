@@ -347,6 +347,68 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-activity", activity);
   });
 
+  // Handle leave-room event
+  socket.on("leave-room", async (roomId) => {
+    console.log(`[leave-room] room=${roomId} user=${socket.data.user?.name}`);
+    
+    // Send leave system message to chat
+    if (socket.data.user) {
+      const leaveMessage = {
+        id: Date.now().toString(),
+        author: { id: 'system', name: 'System' },
+        text: `${socket.data.user.name} has left the room`,
+        timestamp: new Date(),
+        isSystemMessage: true
+      };
+      
+      // Save to database
+      await saveChatMessage(roomId, leaveMessage);
+      
+      // Broadcast to room
+      io.to(roomId).emit("chat-message", leaveMessage);
+      
+      // Broadcast presence update
+      socket.to(roomId).emit("presence-update", {
+        type: "leave",
+        user: socket.data.user
+      });
+    }
+    
+    // Leave the room
+    socket.leave(roomId);
+    
+    // Update user status in database
+    try {
+      await User.findByIdAndUpdate(
+        socket.data.user?.id,
+        {
+          isOnline: false,
+          lastActive: new Date(),
+          currentRoom: null
+        }
+      );
+    } catch (error) {
+      console.error('Error updating user on leave:', error);
+    }
+  });
+
+  // Handle cursor movement for collaborative cursors
+  socket.on("cursor-move", (roomId, cursorData) => {
+    // Add user info and broadcast to others in room
+    const cursor = {
+      x: cursorData.x,
+      y: cursorData.y,
+      userId: socket.id,
+      userName: socket.data.user?.name || 'Anonymous',
+      userAvatar: socket.data.user?.avatar,
+      color: cursorData.color || '#6366f1', // Default color
+      timestamp: Date.now()
+    };
+    
+    // Broadcast cursor position to other users in room (not sender)
+    socket.to(roomId).emit("cursor-update", cursor);
+  });
+
   socket.on("save-room", async (roomId) => {
     const roomData = activeRooms.get(roomId);
     if (roomData) {

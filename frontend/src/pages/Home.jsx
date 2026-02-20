@@ -88,14 +88,13 @@ export default function Home() {
 
         {/* Preview Image */}
         <div className="mt-16 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-gray-900 to-transparent h-32 bottom-0 z-10"></div>
           <img
             src="/tldrawFile.png"
-            alt="DoodleSync board preview"
-            className="mx-auto w-full max-w-4xl h-auto object-contain"
-          />
-        </div>
-      </section>
+              alt="DoodleSync board preview"
+              className="mx-auto w-full max-w-4xl h-auto object-contain"
+            />
+          </div>
+              </section>
 
       {/* Use Cases Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
