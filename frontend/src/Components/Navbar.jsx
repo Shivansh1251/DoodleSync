@@ -24,7 +24,7 @@ export default function Navbar() {
   }
   
   return (
-    <nav className="bg-transparent">
+    <nav className="relative z-50 bg-transparent">
       <div className="mx-auto w-full max-w-4xl px-3 md:px-4 py-2">
         <div className="flex items-center justify-between h-14 rounded-full bg-white/90 dark:bg-gray-800/90 supports-[backdrop-filter]:backdrop-blur border border-gray-200 dark:border-gray-700 shadow-sm px-3 md:px-4 transition-colors duration-300">
           {/* Logo / Name */}
