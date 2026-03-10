@@ -52,7 +52,7 @@ JWT_SECRET=your_jwt_secret_here
 2. Create a new cluster
 3. Get your connection string and update the `MONGODB_URI` in `.env`:
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/doodlesync
+<!-- MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/doodlesync -->
 ```
 
 ## Running the Server

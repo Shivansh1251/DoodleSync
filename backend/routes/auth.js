@@ -121,13 +121,12 @@ router.post('/login/request-otp', async (req, res) => {
     user.loginOTPExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // Send OTP email
-    const emailSent = await sendLoginOTP(user.email, user.name, otp);
+    // Send OTP email asynchronously (don't wait for it to complete)
+    sendLoginOTP(user.email, user.name, otp).catch(err => {
+      console.error('Failed to send OTP email:', err);
+    });
 
-    if (!emailSent) {
-      return res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
-    }
-
+    // Respond immediately without waiting for email
     res.json({
       message: 'OTP sent to your email. Please check your inbox.',
       email: user.email
@@ -379,12 +378,10 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // Send OTP email
-    const emailSent = await sendPasswordResetOTP(user.email, user.name, otp);
-
-    if (!emailSent) {
-      return res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
-    }
+    // Send OTP email asynchronously (don't wait for it to complete)
+    sendPasswordResetOTP(user.email, user.name, otp).catch(err => {
+      console.error('Failed to send password reset OTP email:', err);
+    });
 
     res.json({ 
       message: 'If account exists, OTP will be sent to your email',

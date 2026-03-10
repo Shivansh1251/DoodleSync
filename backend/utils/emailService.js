@@ -1,8 +1,21 @@
 import nodemailer from 'nodemailer';
 
+// Email timeout in milliseconds (30 seconds)
+const EMAIL_TIMEOUT = 30000;
+
+// Wrapper to add timeout to email sending
+const withTimeout = (promise, timeoutMs = EMAIL_TIMEOUT) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email sending timeout')), timeoutMs)
+    )
+  ]);
+};
+
 // Create transporter for sending emails
 const createTransporter = () => {
-  return nodemailer.createTransport({
+  return nodemailer.createTransporter({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'doodlesync@gmail.com',
@@ -77,7 +90,7 @@ export const sendWelcomeEmail = async (email, name) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    await withTimeout(transporter.sendMail(mailOptions));
     console.log(`Welcome email sent to ${email}`);
     return true;
   } catch (error) {
@@ -146,7 +159,7 @@ export const sendLoginOTP = async (email, name, otp) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    await withTimeout(transporter.sendMail(mailOptions));
     console.log(`Login OTP sent to ${email}`);
     return true;
   } catch (error) {
@@ -216,7 +229,7 @@ export const sendPasswordResetOTP = async (email, name, otp) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    await withTimeout(transporter.sendMail(mailOptions));
     console.log(`Password reset OTP sent to ${email}`);
     return true;
   } catch (error) {

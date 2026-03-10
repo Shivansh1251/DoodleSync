@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/User.js';
+import { sendWelcomeEmail } from '../utils/emailService.js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -53,6 +54,12 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
           });
 
           await user.save();
+          
+          // Send welcome email to new Google OAuth users (non-blocking)
+          sendWelcomeEmail(user.email, user.name).catch(err => {
+            console.error('Failed to send welcome email to Google OAuth user:', err);
+          });
+          
           done(null, user);
         } catch (error) {
           done(error, null);
