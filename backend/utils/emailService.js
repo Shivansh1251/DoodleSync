@@ -1,16 +1,30 @@
 import nodemailer from 'nodemailer';
 
-// Email timeout in milliseconds (30 seconds)
-const EMAIL_TIMEOUT = 30000;
+// Email timeout in milliseconds (60 seconds - increased for slow connections)
+const EMAIL_TIMEOUT = 60000;
 
 // Wrapper to add timeout to email sending
 const withTimeout = (promise, timeoutMs = EMAIL_TIMEOUT) => {
   return Promise.race([
     promise,
     new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Email sending timeout')), timeoutMs)
+      setTimeout(() => reject(new Error('Email sending timeout - SMTP connection took too long')), timeoutMs)
     )
   ]);
+};
+
+// Retry logic for email sending
+const withRetry = async (fn, retries = 2) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      console.log(`📧 Email attempt ${i + 1} failed: ${error.message}`);
+      if (i === retries - 1) throw error;
+      // Wait 2 seconds before retry
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
 };
 
 // Create transporter for sending emails
@@ -29,7 +43,12 @@ const createTransporter = () => {
     auth: {
       user: emailUser,
       pass: emailPass
-    }
+    },
+    // Add connection timeout settings for slow/blocked networks
+    connectionTimeout: 30000, // 30 seconds
+    greetingTimeout: 30000,
+    socketTimeout: 45000,
+    pool: true // Use connection pooling
   });
 };
 
@@ -57,15 +76,28 @@ export const testEmailConnection = async () => {
       };
     }
     
-    await transporter.verify();
+    // Try to verify connection with timeout
+    await withTimeout(transporter.verify(), 15000); // 15 second timeout for testing
     return {
       success: true,
       message: 'Email service is working correctly'
     };
   } catch (error) {
+    let errorMessage = error.message;
+    let suggestion = '';
+    
+    if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+      suggestion = '⚠️ SMTP connection timed out. Render.com may be blocking Gmail SMTP. Consider using SendGrid, Mailgun, or Resend.';
+    } else if (error.message.includes('ECONNREFUSED')) {
+      suggestion = '⚠️ Connection refused. Check if Gmail SMTP is accessible from your server.';
+    } else if (error.message.includes('authentication')) {
+      suggestion = '⚠️ Authentication failed. Check if your Gmail App Password is correct.';
+    }
+    
     return {
       success: false,
-      error: error.message
+      error: errorMessage,
+      suggestion: suggestion || 'Check server logs for more details'
     };
   }
 };
@@ -136,12 +168,15 @@ export const sendWelcomeEmail = async (email, name) => {
       `
     };
 
-    await withTimeout(transporter.sendMail(mailOptions));
+    await withRetry(() => withTimeout(transporter.sendMail(mailOptions)));
     console.log(`✅ Welcome email sent successfully to ${email}`);
     return true;
   } catch (error) {
     console.error(`❌ Error sending welcome email to ${email}:`, error.message);
     console.error('Email config check:', checkEmailConfig());
+    if (error.message.includes('timeout')) {
+      console.error('⚠️ Render may be blocking SMTP connections. Consider using SendGrid/Mailgun instead.');
+    }
     return false;
   }
 };
@@ -206,12 +241,15 @@ export const sendLoginOTP = async (email, name, otp) => {
       `
     };
 
-    await withTimeout(transporter.sendMail(mailOptions));
+    await withRetry(() => withTimeout(transporter.sendMail(mailOptions)));
     console.log(`✅ Login OTP sent successfully to ${email}`);
     return true;
   } catch (error) {
     console.error(`❌ Error sending login OTP to ${email}:`, error.message);
     console.error('Email config check:', checkEmailConfig());
+    if (error.message.includes('timeout')) {
+      console.error('⚠️ Render may be blocking SMTP connections. Consider using SendGrid/Mailgun instead.');
+    }
     return false;
   }
 };
@@ -277,12 +315,15 @@ export const sendPasswordResetOTP = async (email, name, otp) => {
       `
     };
 
-    await withTimeout(transporter.sendMail(mailOptions));
+    await withRetry(() => withTimeout(transporter.sendMail(mailOptions)));
     console.log(`✅ Password reset OTP sent successfully to ${email}`);
     return true;
   } catch (error) {
     console.error(`❌ Error sending password reset OTP to ${email}:`, error.message);
     console.error('Email config check:', checkEmailConfig());
+    if (error.message.includes('timeout')) {
+      console.error('⚠️ Render may be blocking SMTP connections. Consider using SendGrid/Mailgun instead.');
+    }
     return false;
   }
 };
