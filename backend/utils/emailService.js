@@ -15,13 +15,59 @@ const withTimeout = (promise, timeoutMs = EMAIL_TIMEOUT) => {
 
 // Create transporter for sending emails
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  const emailUser = process.env.EMAIL_USER || 'doodlesync@gmail.com';
+  const emailPass = process.env.EMAIL_PASSWORD;
+  
+  if (!emailPass) {
+    console.error('❌ EMAIL_PASSWORD not configured! Email service will not work.');
+  } else {
+    console.log(`✅ Email service configured for: ${emailUser}`);
+  }
+  
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || 'doodlesync@gmail.com',
-      pass: process.env.EMAIL_PASSWORD // Gmail App Password
+      user: emailUser,
+      pass: emailPass
     }
   });
+};
+
+// Check email configuration
+export const checkEmailConfig = () => {
+  const hasUser = !!process.env.EMAIL_USER;
+  const hasPassword = !!process.env.EMAIL_PASSWORD;
+  
+  return {
+    configured: hasUser && hasPassword,
+    emailUser: process.env.EMAIL_USER || 'Not set',
+    emailPassword: hasPassword ? '✅ Set' : '❌ Not set'
+  };
+};
+
+// Test email connection
+export const testEmailConnection = async () => {
+  try {
+    const transporter = createTransporter();
+    
+    if (!process.env.EMAIL_PASSWORD) {
+      return {
+        success: false,
+        error: 'EMAIL_PASSWORD environment variable not set'
+      };
+    }
+    
+    await transporter.verify();
+    return {
+      success: true,
+      message: 'Email service is working correctly'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 };
 
 // Generate random OTP
@@ -91,10 +137,11 @@ export const sendWelcomeEmail = async (email, name) => {
     };
 
     await withTimeout(transporter.sendMail(mailOptions));
-    console.log(`Welcome email sent to ${email}`);
+    console.log(`✅ Welcome email sent successfully to ${email}`);
     return true;
   } catch (error) {
-    console.error('Error sending welcome email:', error);
+    console.error(`❌ Error sending welcome email to ${email}:`, error.message);
+    console.error('Email config check:', checkEmailConfig());
     return false;
   }
 };
@@ -160,10 +207,11 @@ export const sendLoginOTP = async (email, name, otp) => {
     };
 
     await withTimeout(transporter.sendMail(mailOptions));
-    console.log(`Login OTP sent to ${email}`);
+    console.log(`✅ Login OTP sent successfully to ${email}`);
     return true;
   } catch (error) {
-    console.error('Error sending login OTP:', error);
+    console.error(`❌ Error sending login OTP to ${email}:`, error.message);
+    console.error('Email config check:', checkEmailConfig());
     return false;
   }
 };
@@ -230,10 +278,11 @@ export const sendPasswordResetOTP = async (email, name, otp) => {
     };
 
     await withTimeout(transporter.sendMail(mailOptions));
-    console.log(`Password reset OTP sent to ${email}`);
+    console.log(`✅ Password reset OTP sent successfully to ${email}`);
     return true;
   } catch (error) {
-    console.error('Error sending password reset OTP:', error);
+    console.error(`❌ Error sending password reset OTP to ${email}:`, error.message);
+    console.error('Email config check:', checkEmailConfig());
     return false;
   }
 };

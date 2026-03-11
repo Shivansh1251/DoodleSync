@@ -4,7 +4,7 @@ import { generateToken, authenticateToken } from '../middleware/auth.js';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
-import { sendWelcomeEmail, sendLoginOTP, sendPasswordResetOTP, generateOTP } from '../utils/emailService.js';
+import { sendWelcomeEmail, sendLoginOTP, sendPasswordResetOTP, generateOTP, checkEmailConfig, testEmailConnection } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -30,6 +30,65 @@ const upload = multer({
       return cb(null, true);
     }
     cb(new Error('Only image files are allowed'));
+  }
+});
+
+// EMAIL TEST ENDPOINT - Check if email service is configured correctly
+router.get('/test-email', async (req, res) => {
+  try {
+    const config = checkEmailConfig();
+    const testResult = await testEmailConnection();
+    
+    res.json({
+      emailConfiguration: config,
+      connectionTest: testResult,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to test email service',
+      message: error.message
+    });
+  }
+});
+
+// SEND TEST EMAIL - Requires email parameter
+router.post('/send-test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email parameter is required' });
+    }
+    
+    const config = checkEmailConfig();
+    if (!config.configured) {
+      return res.status(503).json({
+        error: 'Email service not configured',
+        details: config
+      });
+    }
+    
+    // Send test welcome email
+    const sent = await sendWelcomeEmail(email, 'Test User');
+    
+    if (sent) {
+      res.json({
+        success: true,
+        message: `Test email sent to ${email}`,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send test email. Check server logs for details.'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
