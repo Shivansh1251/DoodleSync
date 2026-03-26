@@ -170,6 +170,15 @@ export default function RoomEntry() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-pink-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors duration-300">
       <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-8 w-full max-w-2xl flex flex-col gap-6 transition-colors duration-300">
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
+          >
+            Back to Main
+          </button>
+        </div>
         <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white transition-colors duration-300">Start or Join a Whiteboard Room</h2>
         
         {/* Create/Join New Room Section */}

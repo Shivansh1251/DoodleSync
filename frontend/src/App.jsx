@@ -1,46 +1,110 @@
 import './index.css'
-import BasicExample from './Components/BasicExample'
-import RoomEntry from './pages/RoomEntry'
-import { Routes, Route, Navigate } from "react-router-dom"
-import Home from './pages/Home'
-import Login from './pages/Loginpage'
+import { lazy, Suspense, useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom"
 import CustomCursor from './Components/CustomCursor'
-import Chat from './pages/Chat'
-import Signup from './pages/Signup'
-import RoomBrowser from './Components/RoomBrowser'
-import ChatDebug from './Components/ChatDebug'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import OAuthCallback from './pages/OAuthCallback'
-import UserProfile from './pages/UserProfile'
-import Templates from './pages/Templates'
-import Help from './pages/Help'
+import AppErrorBoundary from './Components/AppErrorBoundary'
 // import Whiteboard from './Components/Whiteboard'
 
+const Home = lazy(() => import('./pages/Home'))
+const RoomEntry = lazy(() => import('./pages/RoomEntry'))
+const RoomBrowser = lazy(() => import('./Components/RoomBrowser'))
+const ChatDebug = lazy(() => import('./Components/ChatDebug'))
+const Login = lazy(() => import('./pages/Loginpage'))
+const Signup = lazy(() => import('./pages/Signup'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'))
+const UserProfile = lazy(() => import('./pages/UserProfile'))
+const Templates = lazy(() => import('./pages/Templates'))
+const Help = lazy(() => import('./pages/Help'))
+const Chat = lazy(() => import('./pages/Chat'))
+const BasicExample = lazy(() => import('./Components/BasicExample'))
+const ErrorPage = lazy(() => import('./pages/ErrorPage'))
+
 function App() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const redirectToError = (message, code = 500) => {
+      if (window.location.pathname !== '/error') {
+        navigate('/error', {
+          replace: true,
+          state: {
+            message: message || 'An unexpected application error occurred.',
+            code,
+          },
+        })
+      }
+    }
+
+    const onWindowError = (event) => {
+      const message = event?.error?.message || event?.message
+      redirectToError(message, 500)
+    }
+
+    const onUnhandledRejection = (event) => {
+      const reasonMessage =
+        event?.reason?.message ||
+        (typeof event?.reason === 'string' ? event.reason : null)
+      redirectToError(reasonMessage, 500)
+    }
+
+    window.addEventListener('error', onWindowError)
+    window.addEventListener('unhandledrejection', onUnhandledRejection)
+
+    return () => {
+      window.removeEventListener('error', onWindowError)
+      window.removeEventListener('unhandledrejection', onUnhandledRejection)
+    }
+  }, [navigate])
+
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
         <CustomCursor />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/room" element={<RoomEntry />} />
-          <Route path="/room-entry" element={<RoomEntry />} />
-          <Route path="/rooms" element={<RoomBrowser />} />
-          <Route path="/debug-chat" element={<ChatDebug />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/auth/callback" element={<OAuthCallback />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/templates" element={<Templates />} />
-          <Route path="/help" element={<Help />} />
-          {/* Redirect /main to home page */}
-          <Route path="/main" element={<Navigate to="/" replace />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/board" element={<BasicExample />} />
-        </Routes>
+        <AppErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-gray-600 dark:text-gray-300">
+                Loading...
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/room" element={<RoomEntry />} />
+              <Route path="/room-entry" element={<RoomEntry />} />
+              <Route path="/rooms" element={<RoomBrowser />} />
+              <Route path="/debug-chat" element={<ChatDebug />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/auth/callback" element={<OAuthCallback />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/error" element={<ErrorPage />} />
+              {/* Redirect /main to home page */}
+              <Route path="/main" element={<Navigate to="/" replace />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/board" element={<BasicExample />} />
+              <Route
+                path="*"
+                element={
+                  <Navigate
+                    to="/error"
+                    replace
+                    state={{
+                      message: 'The page you are looking for does not exist.',
+                      code: 404,
+                    }}
+                  />
+                }
+              />
+            </Routes>
+          </Suspense>
+        </AppErrorBoundary>
       </div>
     </>
   )
