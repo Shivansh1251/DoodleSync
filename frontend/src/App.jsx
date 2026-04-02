@@ -1,6 +1,6 @@
 import './index.css'
-import { lazy, Suspense, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom"
+import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from "react-router-dom"
 import CustomCursor from './Components/CustomCursor'
 import AppErrorBoundary from './Components/AppErrorBoundary'
 // import Whiteboard from './Components/Whiteboard'
@@ -22,45 +22,14 @@ const BasicExample = lazy(() => import('./Components/BasicExample'))
 const ErrorPage = lazy(() => import('./pages/ErrorPage'))
 
 function App() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const redirectToError = (message, code = 500) => {
-      if (window.location.pathname !== '/error') {
-        navigate('/error', {
-          replace: true,
-          state: {
-            message: message || 'An unexpected application error occurred.',
-            code,
-          },
-        })
-      }
-    }
-
-    const onWindowError = (event) => {
-      const message = event?.error?.message || event?.message
-      redirectToError(message, 500)
-    }
-
-    const onUnhandledRejection = (event) => {
-      const reasonMessage =
-        event?.reason?.message ||
-        (typeof event?.reason === 'string' ? event.reason : null)
-      redirectToError(reasonMessage, 500)
-    }
-
-    window.addEventListener('error', onWindowError)
-    window.addEventListener('unhandledrejection', onUnhandledRejection)
-
-    return () => {
-      window.removeEventListener('error', onWindowError)
-      window.removeEventListener('unhandledrejection', onUnhandledRejection)
-    }
-  }, [navigate])
-
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+        {/*
+          Global window error listeners were removed because they can trigger on many runtime
+          issues (including async rejections), causing unexpected redirects to /error.
+          Route-level 404 and React render errors are still handled by existing routes/boundary.
+        */}
         <CustomCursor />
         <AppErrorBoundary>
           <Suspense

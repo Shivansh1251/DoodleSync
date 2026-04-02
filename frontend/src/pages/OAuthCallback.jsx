@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import AuthService from '../utils/AuthService'
+import { useAuth } from '../context/AuthContext'
 
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const { loginWithToken } = useAuth()
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -20,9 +21,7 @@ export default function OAuthCallback() {
 
       if (token) {
         try {
-          AuthService.setToken(token)
-          const user = await AuthService.getCurrentUser()
-          AuthService.setUser(user)
+          await loginWithToken(token)
           navigate('/')
         } catch (err) {
           setError('Failed to authenticate. Please try again.')
@@ -35,7 +34,7 @@ export default function OAuthCallback() {
     }
 
     handleCallback()
-  }, [searchParams, navigate])
+  }, [searchParams, navigate, loginWithToken])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

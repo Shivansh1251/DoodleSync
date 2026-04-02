@@ -1,18 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation } from "react-router-dom"
 
 export default function CustomCursor() {
   const [pos, setPos] = useState({ x: 0, y: 0 })
-  const [trail, setTrail] = useState([])
   const [sparks, setSparks] = useState([])
   const [hovering, setHovering] = useState(false)
   const sparkIdRef = useRef(0)
   const rafRef = useRef()
-  const lastPointRef = useRef(null)
+  const lastMoveRef = useRef({ x: 0, y: 0, t: 0 })
 
   // Tunables
-  const LIFESPAN = 800 // ms the spark lasts before disappearing
-  const MAX_POINTS = 0 // no line path anymore
+  const LIFESPAN = 700 // ms each spark lasts before disappearing
   const BASE_COLOR = '#4D96FF' // DoodleSync-like blue
   const HOVER_COLOR = '#06B6D4' // cyan accent on hover
   const GRADIENT = 'linear-gradient(90deg, #06b6d4 0%, #8b5cf6 100%)'
@@ -22,19 +20,27 @@ export default function CustomCursor() {
   useEffect(() => {
     const move = (e) => {
       setPos({ x: e.clientX, y: e.clientY })
-      // no path: only sparkles
 
-      // add sparkles occasionally
-      if (Math.random() < 0.9) {
-        const id = sparkIdRef.current++
-        const angle = Math.random() * Math.PI * 2
-        const distance = 6 + Math.random() * 26
-        const dx = Math.cos(angle) * distance
-        const dy = Math.sin(angle) * distance
-        setSparks((prev) => [
-          ...prev.slice(-48), // keep last 48 sparks
-          { id, x: e.clientX, y: e.clientY, dx, dy }
-        ])
+      const now = performance.now()
+      const prev = lastMoveRef.current
+      const dt = Math.max(16, now - prev.t || 16)
+      const dist = Math.hypot(e.clientX - prev.x, e.clientY - prev.y)
+      const speed = dist / dt
+      lastMoveRef.current = { x: e.clientX, y: e.clientY, t: now }
+
+      // Emit more particles at higher movement speed for a richer trail.
+      if (Math.random() < 0.95) {
+        const burstCount = speed > 1.4 ? 3 : speed > 0.8 ? 2 : 1
+        const nextSparks = Array.from({ length: burstCount }, () => {
+          const id = sparkIdRef.current++
+          const angle = Math.random() * Math.PI * 2
+          const distance = 8 + Math.random() * 30
+          const dx = Math.cos(angle) * distance
+          const dy = Math.sin(angle) * distance
+          return { id, x: e.clientX, y: e.clientY, dx, dy, t: now }
+        })
+
+        setSparks((current) => [...current.slice(-90), ...nextSparks])
       }
     }
 
@@ -63,20 +69,12 @@ export default function CustomCursor() {
   useEffect(() => {
     const tick = () => {
       const now = performance.now()
-      setSparks((prev) => prev.filter((s) => now - (s.t || now) < LIFESPAN))
+      setSparks((prev) => prev.filter((s) => now - s.t < LIFESPAN))
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
-
-  // SVG line path for smooth stroke
-  const getLinePath = (points) => {
-    if (points.length < 2) return "";
-    return points
-      .map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`))
-      .join(" ");
-  };
 
   const strokeColor = hovering ? HOVER_COLOR : BASE_COLOR
   const isBoard = location.pathname.startsWith('/board')
@@ -88,13 +86,27 @@ export default function CustomCursor() {
         <>
           {/* Gradient cursor dot */}
           <div
-            className="fixed pointer-events-none z-50 rounded-full shadow-md"
+            className="fixed pointer-events-none z-[9999] rounded-full shadow-md"
             style={{
               transform: `translate(${pos.x - 10}px, ${pos.y - 10}px)`,
               width: 20,
               height: 20,
               backgroundImage: GRADIENT,
               border: '2px solid rgba(0,0,0,0.05)',
+              boxShadow: `0 0 0 2px ${strokeColor}22, 0 0 20px ${strokeColor}99`,
+            }}
+          />
+
+          {/* Outer ring gives a stronger cursor feel and reacts on hover */}
+          <div
+            className="fixed pointer-events-none z-[9998] rounded-full"
+            style={{
+              transform: `translate(${pos.x - 18}px, ${pos.y - 18}px) scale(${hovering ? 1.15 : 1})`,
+              width: 36,
+              height: 36,
+              border: `1.5px solid ${strokeColor}99`,
+              transition: 'transform 120ms ease-out, border-color 120ms ease-out',
+              animation: 'cursorPulse 1.6s ease-in-out infinite',
             }}
           />
 
@@ -102,7 +114,7 @@ export default function CustomCursor() {
           {sparks.map((s) => (
             <div
               key={s.id}
-              className="fixed pointer-events-none z-40"
+              className="fixed pointer-events-none z-[9998]"
               style={{
                 left: 0,
                 top: 0,
@@ -112,13 +124,13 @@ export default function CustomCursor() {
               <div
                 className="rounded-full"
                 style={{
-                  width: 10,
-                  height: 10,
+                  width: 12,
+                  height: 12,
                   background: `radial-gradient(circle, rgba(255,255,255,1) 0%, ${strokeColor} 40%, ${strokeColor}00 100%)`,
-                  animation: "sparkle 600ms ease-out forwards",
+                  animation: "sparkle 700ms ease-out forwards",
                   "--x": `${s.dx}px`,
                   "--y": `${s.dy}px`,
-                  boxShadow: `0 0 14px ${strokeColor}99`,
+                  boxShadow: `0 0 16px ${strokeColor}bb`,
                 }}
               />
             </div>

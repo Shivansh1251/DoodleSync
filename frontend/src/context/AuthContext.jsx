@@ -40,6 +40,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const verifyLoginOTP = async (email, otp) => {
+    const data = await AuthService.verifyLoginOTP(email, otp);
+    setUser(data.user);
+    return data;
+  };
+
+  const loginWithToken = async (token) => {
+    AuthService.setToken(token);
+    const currentUser = await AuthService.getCurrentUser();
+    setUser(currentUser);
+    return currentUser;
+  };
+
   const signup = async (name, email, password) => {
     const data = await AuthService.signup(name, email, password);
     setUser(data.user);
@@ -83,6 +96,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isGuest: user?.isGuest || false,
     login,
+    verifyLoginOTP,
+    loginWithToken,
     signup,
     guestLogin,
     logout,

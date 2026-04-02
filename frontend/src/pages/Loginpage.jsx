@@ -6,7 +6,7 @@ import { Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login, guestLogin } = useAuth()
+  const { login, verifyLoginOTP, guestLogin } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -36,8 +36,7 @@ export default function Login() {
           setTempEmail(form.email)
           setError('')
         } else {
-          await AuthService.verifyLoginOTP(tempEmail, otp)
-          await login(tempEmail, form.password)
+          await verifyLoginOTP(tempEmail, otp)
           navigate('/')
         }
       } else {
