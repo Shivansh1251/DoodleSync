@@ -50,10 +50,7 @@ JWT_SECRET=your_jwt_secret_here
 ### MongoDB Atlas (Cloud)
 1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
 2. Create a new cluster
-3. Get your connection string and update the `MONGODB_URI` in `.env`:
-```env
-<!-- MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/doodlesync -->
-```
+3. Get your connection string and set it as `MONGODB_URI` in your local `backend/.env` file. Keep the URI private: do not paste it into documentation, commit it, or share it in logs or screenshots.
 
 ## Running the Server
 
