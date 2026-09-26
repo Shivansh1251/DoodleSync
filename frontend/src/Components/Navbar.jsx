@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import DoodleEye from './DoodleEye'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
@@ -22,29 +23,49 @@ export default function Navbar() {
     if (avatar.startsWith('http')) return avatar
     return `${API_URL.replace('/api', '')}${avatar}`
   }
+
+  const handleLogoPointerMove = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 4
+    const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2.8
+    event.currentTarget.style.setProperty('--doodlesync-eye-x', `${x.toFixed(2)}px`)
+    event.currentTarget.style.setProperty('--doodlesync-eye-y', `${y.toFixed(2)}px`)
+  }
+
+  const resetLogoEyes = (event) => {
+    event.currentTarget.style.setProperty('--doodlesync-eye-x', '0px')
+    event.currentTarget.style.setProperty('--doodlesync-eye-y', '0px')
+  }
   
   return (
     <nav className="relative z-50 bg-transparent">
       <div className="mx-auto w-full max-w-4xl px-3 md:px-4 py-2">
-        <div className="flex items-center justify-between h-14 rounded-full bg-white/90 dark:bg-gray-800/90 supports-[backdrop-filter]:backdrop-blur border border-gray-200 dark:border-gray-700 shadow-sm px-3 md:px-4 transition-colors duration-300">
+        <div className="flex items-center justify-between h-14 rounded-full bg-white/90 dark:bg-gray-800/90 supports-[backdrop-filter]:backdrop-blur border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg hover:border-purple-200 dark:hover:border-purple-800/70 px-3 md:px-4 transition-[border-color,box-shadow,background-color] duration-300">
           {/* Logo / Name */}
-          <Link to="/" className="text-lg md:text-xl font-bold bg-gradient-to-r from-cyan-500 to-purple-600 bg-clip-text text-transparent">
-            DoodleSync
+          <Link to="/" onPointerMove={handleLogoPointerMove} onPointerLeave={resetLogoEyes} className="relative shrink-0 text-[1.35rem] md:text-[1.6rem] font-black tracking-tight no-underline transition-transform duration-300 hover:scale-[1.03]">
+            <span className="doodlesync-logo" aria-hidden="true">
+              <span>D</span>
+              <span className="doodlesync-logo-eyes"><DoodleEye /><DoodleEye /></span>
+              <span>dleSync</span>
+            </span>
+            <span className="sr-only">DoodleSync</span>
           </Link>
 
           {/* Center Links */}
-          <ul className="hidden md:flex gap-4 text-gray-700 dark:text-gray-200 font-medium text-sm">
-            <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-400">Design</Link></li>
-            <li><Link to="/templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</Link></li>
-            <li><Link to="/help" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
+          <ul className="hidden md:flex gap-5 text-gray-700 dark:text-gray-200 font-medium text-sm">
+            <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="relative py-1 transition-colors duration-200 hover:text-purple-600 dark:hover:text-purple-400 after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-gradient-to-r after:from-cyan-400 after:to-purple-500 after:transition-transform after:duration-300 hover:after:scale-x-100">Design</Link></li>
+            <li><Link to="/templates" className="relative py-1 transition-colors duration-200 hover:text-purple-600 dark:hover:text-purple-400 after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-gradient-to-r after:from-cyan-400 after:to-purple-500 after:transition-transform after:duration-300 hover:after:scale-x-100">Templates</Link></li>
+            <li><Link to="/help" className="relative py-1 transition-colors duration-200 hover:text-purple-600 dark:hover:text-purple-400 after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-gradient-to-r after:from-cyan-400 after:to-purple-500 after:transition-transform after:duration-300 hover:after:scale-x-100">Help</Link></li>
           </ul>
 
           {/* Right Buttons */}
           <div className="hidden sm:flex items-center gap-2">
             <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
-              aria-label="Toggle theme"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-purple-300 hover:rotate-12 hover:scale-110 text-gray-700 dark:text-gray-200 transition-all duration-300"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              aria-pressed={theme === 'dark'}
             >
               {theme === 'light' ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -133,10 +154,10 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link to="/signup" className="px-2.5 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Link to="/signup" className="px-2.5 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:-translate-y-0.5 transition-all duration-200">
                   Sign up
                 </Link>
-                <Link to="/login" className="px-2.5 py-1 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors">
+                <Link to="/login" className="px-2.5 py-1 text-sm rounded-md bg-purple-600 text-white shadow-sm hover:bg-purple-700 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
                   Log in
                 </Link>
               </>
@@ -145,7 +166,10 @@ export default function Navbar() {
           <div className="sm:hidden flex items-center gap-2">
             <button 
               onClick={toggleTheme} 
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-purple-300 hover:rotate-12 hover:scale-110 text-gray-700 dark:text-gray-200 transition-all duration-300"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              aria-pressed={theme === 'dark'}
             >
               {theme === 'light' ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -175,7 +199,7 @@ export default function Navbar() {
                 )}
               </button>
             )}
-            <button onClick={() => setOpen(!open)} className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors">
+            <button onClick={() => setOpen(!open)} className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-purple-300 hover:scale-105 text-gray-700 dark:text-gray-200 transition-all duration-200">
               <span className="sr-only">Toggle menu</span>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -214,9 +238,9 @@ export default function Navbar() {
               </div>
             )}
             <ul className="flex flex-col gap-2 text-gray-700 dark:text-gray-200 font-medium text-sm">
-              <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-400">Design</Link></li>
-              <li><Link to="/templates" className="hover:text-purple-600 dark:hover:text-purple-400">Templates</Link></li>
-              <li><Link to="/help" className="hover:text-purple-600 dark:hover:text-purple-400">Help</Link></li>
+              <li><Link to="/board" target="_blank" rel="noopener noreferrer" className="block rounded-lg px-3 py-2 transition-colors duration-200 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-300">Design</Link></li>
+              <li><Link to="/templates" className="block rounded-lg px-3 py-2 transition-colors duration-200 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-300">Templates</Link></li>
+              <li><Link to="/help" className="block rounded-lg px-3 py-2 transition-colors duration-200 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-300">Help</Link></li>
             </ul>
             {isAuthenticated && user ? (
               <div className="mt-3 flex flex-col gap-2">

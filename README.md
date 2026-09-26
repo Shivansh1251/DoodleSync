@@ -43,6 +43,8 @@ CLIENT_URL=http://localhost:5173
 # Configure frontend/.env
 VITE_SERVER_URL=http://localhost:4000
 VITE_API_URL=http://localhost:4000/api
+# Optional in production: used for canonical and social metadata
+VITE_SITE_URL=https://your-production-domain.example
 
 # Start servers
 cd backend && npm run dev

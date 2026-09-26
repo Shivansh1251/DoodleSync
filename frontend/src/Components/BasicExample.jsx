@@ -6,6 +6,7 @@ import ConnectionStatus from './ConnectionStatus'
 import OnlineUsers from './OnlineUsers'
 import { io } from 'socket.io-client'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 
 const SERVER = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 
@@ -25,6 +26,7 @@ function getUser() {
 }
 
 export default function BasicExample() {
+  const { theme } = useTheme()
   const [open, setOpen] = useState(true)
   const [socketConnected, setSocketConnected] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
@@ -45,13 +47,16 @@ export default function BasicExample() {
   const storageKey = `tldraw-doc-${roomId}`
   const onMount = (editor) => {
     editorRef.current = editor
+    editor.user.updateUserPreferences({ colorScheme: theme })
     try {
       const raw = localStorage.getItem(storageKey)
       if (raw) {
         const snapshot = JSON.parse(raw)
         editor.store.loadSnapshot(snapshot)
       }
-    } catch {}
+    } catch {
+      editor.store.clearHistory?.()
+    }
 
     // save on changes (debounced)
     let t
@@ -66,7 +71,9 @@ export default function BasicExample() {
           if (s?.connected && !applyingRemote.current) {
             s.emit('doc-update', roomId, snapshot)
           }
-        } catch {}
+        } catch {
+          // Local persistence is best effort; the board remains usable.
+        }
       }, 400)
     }
     const unsub = editor.store.listen(save, { scope: 'document' })
@@ -91,14 +98,16 @@ export default function BasicExample() {
     }
   }
 
+  useEffect(() => {
+    editorRef.current?.user.updateUserPreferences({ colorScheme: theme })
+  }, [theme])
+
   // connect sockets and wire server -> editor
   useEffect(() => {
-    console.log('BasicExample: Creating socket connection to', SERVER) // DEBUG
     const s = io(SERVER, { transports: ['websocket'] })
     socketRef.current = s
     
     s.on('connect', () => {
-      console.log('BasicExample: Socket connected, joining room', roomId) // DEBUG
       setSocketConnected(true)
       // join after connect so socket.id is available on server
       s.emit('join-room', roomId, { id: s.id, name: user.name, avatar: user.avatar })
@@ -118,13 +127,11 @@ export default function BasicExample() {
     })
     
     s.on('disconnect', () => {
-      console.log('BasicExample: Socket disconnected') // DEBUG
       setSocketConnected(false)
     })
 
     // Handle chat messages in BasicExample
     s.on('chat-message', (message) => {
-      console.log('BasicExample: Received chat message:', message) // DEBUG
       setChatMessages(prev => {
         // Avoid duplicates
         if (prev.some(m => m.id === message.id)) return prev
@@ -134,13 +141,11 @@ export default function BasicExample() {
 
     // Handle chat history
     s.on('chat-history', (history) => {
-      console.log('BasicExample: Received chat history:', history?.length, 'messages') // DEBUG
       setChatMessages(history || [])
     })
 
     // Handle presence updates
     s.on('presence-update', (evt) => {
-      console.log('BasicExample: Presence update:', evt) // DEBUG
       
       if (evt?.type === 'join' && evt.roomUsers && Array.isArray(evt.roomUsers)) {
         // Process the users and add (you) label
@@ -148,7 +153,6 @@ export default function BasicExample() {
           ...user,
           name: user.id === s.id ? `${user.name} (you)` : user.name
         }))
-        console.log('BasicExample: Setting online users:', usersWithLabels)
         setOnlineUsers(usersWithLabels)
       } else if (evt?.type === 'leave' && evt?.user) {
         setOnlineUsers(prev => prev.filter(u => u.id !== evt.user.id))
@@ -188,7 +192,7 @@ export default function BasicExample() {
     return () => {
       s.disconnect()
     }
-  }, [roomId, user.name])
+  }, [roomId, user.name, user.avatar])
 
   // Function to send chat messages
   const sendChatMessage = (text) => {
@@ -202,7 +206,6 @@ export default function BasicExample() {
       timestamp: new Date()
     }
 
-    console.log('BasicExample: Sending chat message:', message) // DEBUG
     s.emit('chat-message', roomId, message)
   }
 
@@ -212,8 +215,8 @@ export default function BasicExample() {
       await navigator.clipboard.writeText(roomId)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy room ID:', err)
+    } catch {
+      setCopied(false)
     }
   }
 
@@ -246,7 +249,7 @@ export default function BasicExample() {
   let boardContent
   try {
     boardContent = <Tldraw onMount={onMount} />
-  } catch (e) {
+  } catch {
     boardContent = <div className="flex items-center justify-center h-full text-red-600 text-lg">Whiteboard failed to load. Check console for errors.</div>
   }
   return (

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import AuthService from '../utils/AuthService';
 
@@ -23,15 +24,21 @@ export const AuthProvider = ({ children }) => {
           const currentUser = await AuthService.getCurrentUser();
           setUser(currentUser);
         }
-      } catch (error) {
-        console.error('Auth check failed:', error);
+      } catch {
         AuthService.removeToken();
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    const idleHandle = window.requestIdleCallback
+      ? window.requestIdleCallback(checkAuth, { timeout: 1500 })
+      : window.setTimeout(checkAuth, 0)
+
+    return () => {
+      if (window.cancelIdleCallback && typeof idleHandle === 'number') window.cancelIdleCallback(idleHandle)
+      else window.clearTimeout(idleHandle)
+    }
   }, []);
 
   const login = async (email, password) => {

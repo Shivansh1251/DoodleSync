@@ -1,8 +1,22 @@
 import { useState } from 'react'
-import { useNavigate, Link } from "react-router-dom"
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LoaderCircle, ShieldCheck, UserRound } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import AuthLayout, { AuthDivider, GoogleAuthButton } from '../Components/AuthLayout'
 import { useAuth } from '../context/AuthContext'
 import AuthService from '../utils/AuthService'
-import { Eye, EyeOff } from 'lucide-react'
+
+const inputClass = 'mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:border-white/20 dark:focus:border-violet-400 dark:focus:ring-violet-400/10'
+const primaryButtonClass = 'group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55 dark:bg-white dark:text-slate-950 dark:shadow-black/20 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-black'
+const secondaryButtonClass = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50/60 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:border-white/20 dark:hover:bg-white/[0.07] dark:hover:text-white dark:focus-visible:ring-offset-black'
+
+function FormError({ children }) {
+  if (!children) return null
+  return (
+    <div role="alert" aria-live="polite" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-5 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/[0.08] dark:text-rose-200">
+      {children}
+    </div>
+  )
+}
 
 export default function Login() {
   const navigate = useNavigate()
@@ -18,13 +32,13 @@ export default function Login() {
   const [showGuestForm, setShowGuestForm] = useState(false)
   const [guestName, setGuestName] = useState('')
 
-  const onChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const onChange = (event) => {
+    setForm({ ...form, [event.target.name]: event.target.value })
     setError('')
   }
 
-  const onSubmit = async (e) => {
-    e.preventDefault()
+  const onSubmit = async (event) => {
+    event.preventDefault()
     setError('')
     setLoading(true)
 
@@ -34,7 +48,6 @@ export default function Login() {
           await AuthService.requestLoginOTP(form.email, form.password)
           setOtpSent(true)
           setTempEmail(form.email)
-          setError('')
         } else {
           await verifyLoginOTP(tempEmail, otp)
           navigate('/')
@@ -45,252 +58,202 @@ export default function Login() {
       }
     } catch (err) {
       setError(err.message || 'Login failed')
-      if (otpSent && err.message.includes('OTP')) {
-        setOtpSent(false)
-      }
+      if (otpSent && err.message?.includes('OTP')) setOtpSent(false)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleLogin = () => {
-    AuthService.initiateGoogleLogin()
-  }
-
-  const handleGuestLogin = async (e) => {
-    e.preventDefault()
+  const handleGuestLogin = async (event) => {
+    event.preventDefault()
     if (!guestName.trim()) {
       setError('Please enter your name')
       return
     }
+
+    setLoading(true)
+    setError('')
     try {
-      setLoading(true)
-      setError('')
       await guestLogin(guestName.trim())
       navigate('/room-entry')
     } catch (err) {
       setError(err.message || 'Failed to create guest session')
+    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      {!showGuestForm ? (
-      <form onSubmit={onSubmit} className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 transition-colors duration-300">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Log in</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Welcome back to DoodleSync.</p>
-        
-        {error && (
-          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
-
-        {!otpSent ? (
-          <>
-            <div className="mt-5 space-y-4">
+    <AuthLayout>
+      <div className="animate-[authRise_.45s_cubic-bezier(.2,.8,.2,1)_both]">
+        {showGuestForm ? (
+          <section aria-labelledby="guest-title">
+            <button
+              type="button"
+              onClick={() => { setShowGuestForm(false); setError('') }}
+              className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              <ArrowLeft size={16} /> Back to sign in
+            </button>
+            <div className="mb-6">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300">Jump right in</p>
+              <h1 id="guest-title" className="text-3xl font-semibold tracking-[-0.045em] text-slate-950 dark:text-white">Continue as a guest</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Pick a name and start sketching with your team.</p>
+            </div>
+            <FormError>{error}</FormError>
+            <form onSubmit={handleGuestLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Email</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={form.email} 
-                  onChange={onChange} 
-                  required 
+                <label htmlFor="guest-name" className="text-sm font-medium text-slate-700 dark:text-slate-200">Your name</label>
+                <input
+                  id="guest-name"
+                  type="text"
+                  name="name"
+                  value={guestName}
+                  onChange={(event) => { setGuestName(event.target.value); setError('') }}
+                  autoComplete="nickname"
+                  autoFocus
+                  required
                   disabled={loading}
-                  className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-                  placeholder="you@example.com" 
+                  className={inputClass}
+                  placeholder="What should we call you?"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Password</label>
-                <div className="relative">
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    name="password" 
-                    value={form.password} 
-                    onChange={onChange} 
-                    required 
-                    disabled={loading}
-                    className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-                    placeholder="Enter your password" 
+              <button type="submit" disabled={loading || !guestName.trim()} className={primaryButtonClass}>
+                {loading ? <LoaderCircle size={17} className="animate-spin" /> : <>Join the canvas <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" /></>}
+              </button>
+            </form>
+            <p className="mt-7 text-center text-sm text-slate-500 dark:text-slate-400">
+              Want to save your work? <Link to="/signup" className="font-semibold text-violet-700 hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200">Create an account</Link>
+            </p>
+          </section>
+        ) : (
+          <section aria-labelledby="login-title">
+            <div className="mb-7">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300">Your canvas is waiting</p>
+              <h1 id="login-title" className="text-3xl font-semibold tracking-[-0.045em] text-slate-950 dark:text-white">Welcome back</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Sign in and pick up where your ideas left off.</p>
+            </div>
+
+            {!otpSent && <GoogleAuthButton onClick={() => AuthService.initiateGoogleLogin()} disabled={loading} />}
+            {!otpSent && <AuthDivider />}
+
+            <FormError>{error}</FormError>
+
+            {otpSent && (
+              <div className="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 dark:border-cyan-300/15 dark:bg-cyan-300/[0.06]">
+                <p className="text-sm font-medium text-cyan-950 dark:text-cyan-100">Check your inbox</p>
+                <p className="mt-1 text-xs leading-5 text-cyan-800/80 dark:text-cyan-100/65">A six-digit sign-in code was sent to <strong className="font-semibold">{tempEmail}</strong>.</p>
+              </div>
+            )}
+
+            <form onSubmit={onSubmit} className="space-y-4">
+              {!otpSent ? (
+                <>
+                  <div>
+                    <label htmlFor="login-email" className="text-sm font-medium text-slate-700 dark:text-slate-200">Email address</label>
+                    <input
+                      id="login-email"
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={onChange}
+                      autoComplete="username"
+                      autoFocus
+                      required
+                      disabled={loading}
+                      className={inputClass}
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <label htmlFor="login-password" className="text-sm font-medium text-slate-700 dark:text-slate-200">Password</label>
+                      <Link to="/forgot-password" className="text-xs font-semibold text-violet-700 transition-colors hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200">Forgot password?</Link>
+                    </div>
+                    <div className="relative">
+                      <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={form.password}
+                        onChange={onChange}
+                        autoComplete="current-password"
+                        required
+                        disabled={loading}
+                        className={`${inputClass} pr-12`}
+                        placeholder="Enter your password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((shown) => !shown)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-pressed={showPassword}
+                        className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:hover:bg-white/10 dark:hover:text-white"
+                      >
+                        {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    </div>
+                  </div>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/80 px-3.5 py-2.5 transition-colors hover:border-violet-200 dark:border-white/10 dark:hover:border-violet-400/30">
+                    <input
+                      type="checkbox"
+                      checked={useOTP}
+                      onChange={(event) => setUseOTP(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 accent-violet-600"
+                    />
+                    <span>
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200"><ShieldCheck size={14} className="text-violet-600 dark:text-violet-300" /> Add email verification</span>
+                      <span className="mt-0.5 block text-[11px] leading-4 text-slate-500 dark:text-slate-400">We’ll send a one-time code after your password.</span>
+                    </span>
+                  </label>
+                </>
+              ) : (
+                <div>
+                  <label htmlFor="login-otp" className="text-sm font-medium text-slate-700 dark:text-slate-200">One-time code</label>
+                  <input
+                    id="login-otp"
+                    type="text"
+                    value={otp}
+                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    autoFocus
+                    required
+                    className={`${inputClass} text-center text-xl font-semibold tracking-[0.45em] tabular-nums`}
+                    placeholder="••••••"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => { setOtpSent(false); setOtp(''); setError('') }}
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    <ArrowLeft size={14} /> Change email or password
                   </button>
                 </div>
-              </div>
-            </div>
+              )}
 
-            <div className="mt-3 flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="useOTP"
-                  checked={useOTP}
-                  onChange={(e) => setUseOTP(e.target.checked)}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label htmlFor="useOTP" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                  Use OTP verification 🔐
-                </label>
-              </div>
-              <Link to="/forgot-password" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                Forgot password?
-              </Link>
-            </div>
+              <button type="submit" disabled={loading || (otpSent && otp.length !== 6)} className={primaryButtonClass}>
+                {loading ? <LoaderCircle size={17} className="animate-spin" /> : <>{otpSent ? 'Verify and sign in' : useOTP ? 'Continue with email code' : 'Sign in'} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" /></>}
+              </button>
+            </form>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="mt-6 w-full px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Processing...' : useOTP ? 'Send OTP' : 'Log in'}
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="mt-5 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                📧 OTP sent to <strong>{tempEmail}</strong>
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                Check your email and enter the 6-digit code
-              </p>
-            </div>
+            {!otpSent && (
+              <>
+                <AuthDivider>or keep it casual</AuthDivider>
+                <button type="button" onClick={() => { setShowGuestForm(true); setError('') }} disabled={loading} className={secondaryButtonClass}>
+                  <UserRound size={16} /> Continue as a guest
+                </button>
+              </>
+            )}
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Enter OTP
-              </label>
-              <input
-                type="text"
-                maxLength="6"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-3 border dark:border-gray-600 rounded-md focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white text-center text-2xl tracking-widest"
-                placeholder="000000"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="mt-6 w-full px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Verifying...' : 'Verify & Login'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setOtpSent(false);
-                setOtp('');
-                setError('');
-              }}
-              className="mt-3 w-full text-gray-600 dark:text-gray-400 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-            >
-              ← Back to login
-            </button>
-          </>
+            <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              New to DoodleSync? <Link to="/signup" className="font-semibold text-violet-700 transition-colors hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200">Create an account</Link>
+            </p>
+          </section>
         )}
-
-        <div className="mt-4">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span className="text-gray-700 dark:text-gray-300">Google</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowGuestForm(true)}
-            disabled={loading}
-            className="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300 disabled:opacity-50"
-          >
-            <span className="text-gray-700 dark:text-gray-300">Continue as Guest</span>
-          </button>
-        </div>
-
-        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
-          No account? <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition-colors duration-300">Sign up</Link>
-        </p>
-      </form>
-      ) : (
-        <form onSubmit={handleGuestLogin} className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6 transition-colors duration-300">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Continue as Guest</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">Enter your name to join as a guest user.</p>
-          
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            </div>
-          )}
-
-          <div className="mt-5">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Your Name</label>
-            <input 
-              type="text"
-              value={guestName} 
-              onChange={(e) => {
-                setGuestName(e.target.value)
-                setError('')
-              }}
-              required 
-              disabled={loading}
-              className="mt-1 w-full border dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-white transition-colors duration-300 disabled:opacity-50" 
-              placeholder="Enter your name" 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading || !guestName.trim()}
-            className="mt-6 w-full px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creating session...' : 'Continue as Guest'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowGuestForm(false)
-              setGuestName('')
-              setError('')
-            }}
-            className="mt-3 w-full text-gray-600 dark:text-gray-400 text-sm hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            ← Back to login
-          </button>
-
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300 text-center">
-            Want a full account? <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition-colors duration-300">Sign up</Link>
-          </p>
-        </form>
-      )}
-    </div>
+      </div>
+    </AuthLayout>
   )
 }

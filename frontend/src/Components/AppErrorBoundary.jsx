@@ -17,10 +17,6 @@ class AppErrorBoundary extends Component {
     }
   }
 
-  componentDidCatch(error, errorInfo) {
-    console.error('AppErrorBoundary caught an error:', error, errorInfo)
-  }
-
   render() {
     if (this.state.hasError) {
       return (

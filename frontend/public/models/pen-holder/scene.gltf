@@ -1,0 +1,313 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 21825,
+      "max": [
+        1.0271822214126587,
+        1.0271822214126587,
+        2.6926639080047607
+      ],
+      "min": [
+        -1.0271823406219482,
+        -1.0271824598312378,
+        0.003801921382546425
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 261900,
+      "componentType": 5126,
+      "count": 21825,
+      "max": [
+        0.9999958276748657,
+        0.9999963045120239,
+        0.9999984502792358
+      ],
+      "min": [
+        -0.9999983310699463,
+        -0.9999963045120239,
+        -0.9999984502792358
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 21825,
+      "max": [
+        0.9900000691413879,
+        0.49000000953674316
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 171348,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 523800,
+      "componentType": 5126,
+      "count": 1365,
+      "max": [
+        1.0595581531524658,
+        1.0595582723617554,
+        2.7542762756347656
+      ],
+      "min": [
+        -1.0595581531524658,
+        -1.0595581531524658,
+        2.6288981437683105
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 540180,
+      "componentType": 5126,
+      "count": 1365,
+      "max": [
+        0.9952498078346252,
+        0.9952498078346252,
+        0.9948488473892212
+      ],
+      "min": [
+        -0.9952498078346252,
+        -0.9952498078346252,
+        -0.983591616153717
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 174600,
+      "componentType": 5126,
+      "count": 1365,
+      "max": [
+        0.5295586585998535,
+        1.0004444122314453
+      ],
+      "min": [
+        7.22056211088784e-05,
+        -0.0018717593047767878
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 685392,
+      "componentType": 5125,
+      "count": 7296,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "li_osh (https://sketchfab.com/li_osh)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/pen-holder-06d79ffd2e254fff89a591d7a28666d5",
+      "title": "pen holder"
+    },
+    "generator": "Sketchfab-12.68.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 714576,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 185520,
+      "byteOffset": 714576,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 556560,
+      "byteOffset": 900096,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 1456656,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "soft_black",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.0265658,
+          0.0265658,
+          0.0265658,
+          1.0
+        ],
+        "metallicFactor": 0.12331351196882087,
+        "roughnessFactor": 0.6462084040153464
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "bump_black_top",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.0374098,
+          0.0374098,
+          0.0374098,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.37868078482875195
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Cylinder.001_soft black_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Cylinder.001_bump black (top_)_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        0.0007784696063026786,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.7285497617762293e-19,
+        -0.0007784696063026786,
+        0.0,
+        0.0,
+        0.0007784696063026786,
+        1.7285497617762293e-19,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "pen holder.fbx"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5
+      ],
+      "matrix": [
+        100.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        99.99999999999868,
+        -1.629206793918314e-05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Cylinder.001"
+    },
+    {
+      "mesh": 0,
+      "name": "Cylinder.001_soft black_0"
+    },
+    {
+      "mesh": 1,
+      "name": "Cylinder.001_bump black (top_)_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

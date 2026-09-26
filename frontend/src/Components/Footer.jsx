@@ -91,7 +91,11 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
+    <footer className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black dark:to-gray-950 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
+      <svg className="footer-doodle" viewBox="0 0 360 100" fill="none" aria-hidden="true">
+        <path d="M8 70C64 12 116 93 170 48c47-39 74 8 112-20 23-17 39-16 70 8" />
+        <path d="M320 36l25-5-11 22" />
+      </svg>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8 md:py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8 mb-6 md:mb-8">
@@ -106,7 +110,7 @@ export default function Footer() {
               The infinite canvas whiteboard where teams collaborate in real-time. Create, brainstorm, and bring your ideas to life—free forever.
             </p>
             <div className="flex items-center gap-2 md:gap-3">
-              {socialLinks.map((social) => (
+              {socialLinks.filter((social) => social.href !== '#').map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
@@ -161,12 +165,18 @@ export default function Footer() {
             <ul className="space-y-2 md:space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 text-xs md:text-sm transition-colors duration-300"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href === '#' ? (
+                    <span className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
+                      {link.name}
+                    </span>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 text-xs md:text-sm transition-colors duration-300"
+                    >
+                      {link.name}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -180,12 +190,18 @@ export default function Footer() {
             <ul className="space-y-2 md:space-y-3">
               {legalLinks.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 text-xs md:text-sm transition-colors duration-300"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href === '#' ? (
+                    <span className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
+                      {link.name}
+                    </span>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 text-xs md:text-sm transition-colors duration-300"
+                    >
+                      {link.name}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -224,6 +240,9 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4">
             <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
               © {currentYear} DoodleSync. All rights reserved.
+            </div>
+            <div className="text-[10px] text-gray-500 dark:text-gray-500">
+              3D pen holder by <a href="https://sketchfab.com/li_osh" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-purple-600">li_osh</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-purple-600">CC BY 4.0</a>
             </div>
             <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm">
               <span className="text-gray-600 dark:text-gray-400">

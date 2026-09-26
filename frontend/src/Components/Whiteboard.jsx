@@ -1,7 +1,8 @@
 // src/components/Whiteboard.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { Tldraw, TldrawEditor } from "tldraw"; // slight abstraction: check docs for exact import
+import { Tldraw } from "tldraw";
 import { io } from "socket.io-client";
+import { useTheme } from '../context/ThemeContext'
 
 const SERVER = import.meta.env.VITE_SERVER_URL || "http://localhost:4000";
 
@@ -25,20 +26,21 @@ const getUserColor = (userId) => {
 };
 
 export default function Whiteboard({ roomId = "default", user = { id: "u1", name: "Shivansh" } }) {
+  const { theme } = useTheme()
   const socketRef = useRef(null);
   const editorRef = useRef(null); // will hold tldraw instance
-  const [connected, setConnected] = useState(false);
   const [remoteCursors, setRemoteCursors] = useState({}); // Store other users' cursors
   const cursorThrottleRef = useRef(null);
   const userColorRef = useRef(getUserColor(user.id));
 
   useEffect(() => {
+    editorRef.current?.user.updateUserPreferences({ colorScheme: theme })
+  }, [theme])
+
+  useEffect(() => {
     socketRef.current = io(SERVER, { transports: ["websocket"] });
 
     const s = socketRef.current;
-    s.on("connect", () => setConnected(true));
-    s.on("disconnect", () => setConnected(false));
-
     // when server sends initial doc
     s.on("doc-init", (doc) => {
       if (!editorRef.current) return;
@@ -58,18 +60,6 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
       editorRef.current.loadDocument?.(docDelta) ?? editorRef.current?.load?.(docDelta);
 
       // If using incremental patch, use editorRef.current.applyPatch or similar (see tldraw docs)
-    });
-
-    // chat messages
-    s.on("chat-message", (msg) => {
-      // handle in chat UI (not shown here)
-      console.log("chat", msg);
-    });
-
-    // NEW: handle chat history from MongoDB
-    s.on("chat-history", (messages) => {
-      console.log("chat history loaded:", messages.length, "messages");
-      // Pass to ChatPanel component
     });
 
     // Handle cursor updates from other users
@@ -145,7 +135,7 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
   return (
     <div className="flex h-screen">
       <div 
-        className="flex-1 bg-white dark:bg-gray-900 transition-colors duration-300 relative"
+        className="flex-1 bg-white dark:bg-black transition-colors duration-300 relative"
         onMouseMove={handleMouseMove}
       >
         {/* Tldraw Canvas */}
@@ -154,6 +144,7 @@ export default function Whiteboard({ roomId = "default", user = { id: "u1", name
             onMount={(app) => {
               // store instance to ref
               editorRef.current = app;
+              app.user.updateUserPreferences({ colorScheme: theme })
               // optionally load local doc or request server doc
             }}
             onChange={(state) => {

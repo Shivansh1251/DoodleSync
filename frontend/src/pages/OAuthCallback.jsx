@@ -23,7 +23,7 @@ export default function OAuthCallback() {
         try {
           await loginWithToken(token)
           navigate('/')
-        } catch (err) {
+        } catch {
           setError('Failed to authenticate. Please try again.')
           setTimeout(() => navigate('/login'), 3000)
         }

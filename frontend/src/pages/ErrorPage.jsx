@@ -10,7 +10,7 @@ export default function ErrorPage() {
     'An unexpected error occurred. Please try again or go back to the home page.'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-orange-100 to-amber-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-orange-100 to-amber-100 dark:from-black dark:via-black dark:to-black p-4 transition-colors duration-300">
       <div className="w-full max-w-xl rounded-2xl shadow-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur p-8 text-center">
         <p className="text-sm uppercase tracking-widest font-semibold text-rose-600 dark:text-rose-400">Error {code}</p>
         <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>

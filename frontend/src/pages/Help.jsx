@@ -96,7 +96,7 @@ export default function Help() {
   const [openFAQ, setOpenFAQ] = useState(null)
 
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+    <main className="min-h-screen bg-white dark:bg-black transition-colors duration-300">
       <Navbar />
       
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">

@@ -32,7 +32,6 @@ export default function RoomEntry() {
   const [roomId, setRoomId] = useState('')
   const [name, setName] = useState('')
   const [selectedAvatar, setSelectedAvatar] = useState(PRESET_AVATARS[0])
-  const [admin, setAdmin] = useState(false)
   const [existingRooms, setExistingRooms] = useState([])
   const [showExistingRooms, setShowExistingRooms] = useState(false)
   const [loadingRooms, setLoadingRooms] = useState(false)
@@ -71,29 +70,23 @@ export default function RoomEntry() {
     setApiError(null)
     try {
       // First test if server is running
-      console.log('Testing server connection...')
       const healthResponse = await fetch(`${SERVER_URL}/api/health`)
       if (!healthResponse.ok) {
         throw new Error('Server health check failed')
       }
-      const healthData = await healthResponse.json()
-      console.log('Server health:', healthData)
+      await healthResponse.json()
       
       // Now load rooms
-      console.log('Loading existing rooms from:', `${SERVER_URL}/api/rooms`)
       const response = await fetch(`${SERVER_URL}/api/rooms`)
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`)
       }
       
       const result = await response.json()
-      console.log('API result:', result)
       
       setExistingRooms(result.rooms || [])
-      console.log('Loaded rooms:', result.rooms?.length || 0)
       
     } catch (err) {
-      console.error('Error loading rooms:', err)
       setApiError(`Cannot connect to server: ${err.message}\nMake sure backend server is running on port 4000`)
       setExistingRooms([])
     } finally {
@@ -141,7 +134,6 @@ export default function RoomEntry() {
         return
       }
       
-      console.log('Creating test room via API...')
       const response = await fetch(`${SERVER_URL}/api/create-test-room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
@@ -152,7 +144,6 @@ export default function RoomEntry() {
       }
       
       const result = await response.json()
-      console.log('Test room created:', result)
       
       localStorage.setItem('ds_user', name.trim())
       localStorage.setItem('ds_avatar', selectedAvatar)
@@ -162,13 +153,12 @@ export default function RoomEntry() {
       setTimeout(() => loadExistingRooms(), 1000)
       
     } catch (err) {
-      console.error('Error creating test room:', err)
       alert(`Failed to create test room: ${err.message}`)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-pink-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-pink-100 dark:from-black dark:to-black p-4 transition-colors duration-300">
       <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-8 w-full max-w-2xl flex flex-col gap-6 transition-colors duration-300">
         <div className="flex justify-start">
           <button

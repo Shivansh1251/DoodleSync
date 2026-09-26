@@ -1,14 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import OnlineUsers from './OnlineUsers'
-
-function getUser() {
-  let name = localStorage.getItem('ds_user')
-  if (!name) {
-    name = `User-${Math.floor(Math.random() * 900 + 100)}`
-    localStorage.setItem('ds_user', name)
-  }
-  return name
-}
 
 export default function SideChat({ 
   onClose, 
@@ -20,12 +11,7 @@ export default function SideChat({
   connected = false,
   onlineUsers = []
 }) {
-  const [present, setPresent] = useState([`${user.name} (you)`]) // Initialize with current user
-  const [activity, setActivity] = useState({})
   const [input, setInput] = useState('')
-  const channelRef = useRef(null)
-  const storageKey = `board-chat-event-${roomId}`
-  const listRef = useRef(null)
   const endRef = useRef(null)
 
   const formatTime = (iso) => {
@@ -36,74 +22,6 @@ export default function SideChat({
       return ''
     }
   }
-
-  useEffect(() => {
-    // Only handle presence and activity events, not chat messages (handled by parent)
-    const s = socket?.current
-    console.log('SideChat: Using socket:', s?.connected ? 'connected' : 'not connected') // DEBUG
-    
-    const onPresence = (evt) => {
-      console.log('SideChat: Presence event:', evt) // DEBUG
-      if (!evt?.type || !evt?.user?.name) return
-      
-      // Update present list based on socket count, not user list
-      if (evt.sockets) {
-        const socketCount = Array.from(evt.sockets).length || 1
-        // Create a simple present list based on socket count
-        const presentList = [`${user.name} (you)`]
-        if (socketCount > 1) {
-          for (let i = 1; i < socketCount; i++) {
-            presentList.push(`User${i + 1}`)
-          }
-        }
-        setPresent(presentList)
-      } else {
-        // Fallback: at least show current user
-        setPresent([`${user.name} (you)`])
-      }
-    }
-    
-    const onActivity = (evt) => {
-      // evt: { user: {name}, type: 'drawing'|'writing', active: true|false }
-      if (!evt?.user?.name || !evt?.type) return
-      setActivity((a) => ({ ...a, [evt.user.name]: evt.active ? evt.type : null }))
-    }
-    
-    if (s) {
-      console.log('SideChat: Setting up presence/activity listeners') // DEBUG
-      s.on('presence-update', onPresence)
-      s.on('activity', onActivity)
-    }
-
-    // BroadcastChannel for realtime across tabs (same origin)
-    try {
-      channelRef.current = new BroadcastChannel(`board-chat-${roomId}`)
-      channelRef.current.onmessage = (e) => {
-        const msg = e.data
-  setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]))
-      }
-    } catch (_) {
-      channelRef.current = null
-    }
-
-    // Fallback via localStorage event
-    const onStorage = (e) => {
-      if (e.key === storageKey && e.newValue) {
-        const msg = JSON.parse(e.newValue)
-  setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]))
-      }
-    }
-    window.addEventListener('storage', onStorage)
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      if (channelRef.current?.close) channelRef.current.close()
-      if (s) {
-        console.log('SideChat: Cleaning up socket event listeners') // DEBUG
-        s.off('presence-update', onPresence)
-        s.off('activity', onActivity)
-      }
-    }
-  }, [socket, roomId])
 
   // auto-scroll to the latest message
   useEffect(() => {
@@ -119,12 +37,6 @@ export default function SideChat({
     if (onSendMessage) {
       onSendMessage(text)
     }
-    try {
-      channelRef.current?.postMessage(msg)
-    } catch (_) { }
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(msg))
-    } catch (_) { }
     setInput('')
   }
 
@@ -173,7 +85,7 @@ export default function SideChat({
         <OnlineUsers socket={socket} roomId={roomId} onlineUsers={onlineUsers} />
       </div>
       
-      <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-4 transition-colors duration-300">
             No messages yet. Start the conversation!

@@ -123,8 +123,8 @@ export default function UserProfile() {
     try {
       const data = await AuthService.getActivity()
       setActivity(data)
-    } catch (err) {
-      console.error('Failed to load activity:', err)
+    } catch {
+      setActivity([])
     }
   }
 
@@ -137,7 +137,7 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-black py-8 px-4 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Header */}

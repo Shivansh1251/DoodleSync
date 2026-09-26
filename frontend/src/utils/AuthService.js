@@ -144,8 +144,8 @@ class AuthService {
             'Authorization': `Bearer ${token}` 
           }
         });
-      } catch (error) {
-        console.error('Logout error:', error);
+      } catch {
+        // Logout is best effort; the local token is removed below.
       }
     }
 

@@ -3,6 +3,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
+import cors from "cors";
 import session from "express-session";
 import connectDB from "./config/database.js";
 import Room from "./models/Room.js";
@@ -21,6 +22,17 @@ const __dirname = path.dirname(__filename);
 // Load environment variables
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const sessionSecret = process.env.SESSION_SECRET || (!isProduction ? 'development-only-session-secret' : null);
+
+if (!sessionSecret) {
+  throw new Error('SESSION_SECRET must be set in production');
+}
+
 // Connect to MongoDB
 connectDB();
 
@@ -32,17 +44,33 @@ if (!fs.existsSync(uploadsDir)) {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+};
+const io = new Server(server, { cors: corsOptions });
 
 // Middleware
 app.use(express.json());
+app.use(cors(corsOptions));
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 // Session middleware (required for passport)
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { secure: isProduction, httpOnly: true, sameSite: 'lax' }
 }));
 
 // Passport middleware
@@ -51,18 +79,6 @@ app.use(passport.session());
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Add CORS middleware for API requests
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 
 const PORT = process.env.PORT || 4000;
 

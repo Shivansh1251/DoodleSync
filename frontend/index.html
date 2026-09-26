@@ -2,9 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- <link rel="icon" href="Icon-removebg-preview.png" /> -->
+    <link rel="icon" type="image/png" href="/Icon-removebg-preview.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DoodleSync</title>
+    <meta name="description" content="DoodleSync is a fast, free collaborative whiteboard for teams, classrooms, and friends to brainstorm, draw, and chat in real time." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#fbfbff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta property="og:site_name" content="DoodleSync" />
+    <meta property="og:title" content="DoodleSync | Real-time collaborative whiteboard" />
+    <meta property="og:description" content="Brainstorm, draw, and chat together on a fast collaborative whiteboard." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/DoodleSync.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DoodleSync | Real-time collaborative whiteboard" />
+    <meta name="twitter:description" content="Brainstorm, draw, and chat together on a fast collaborative whiteboard." />
+    <script>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem('theme')
+          const theme = savedTheme === 'dark' || savedTheme === 'light'
+            ? savedTheme
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.classList.add(theme)
+          document.documentElement.style.colorScheme = theme
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#fbfbff')
+        } catch {
+          document.documentElement.classList.add('light')
+        }
+      })()
+    </script>
+    <title>DoodleSync | Real-time collaborative whiteboard</title>
   </head>
   <body>
     <div id="root"></div>

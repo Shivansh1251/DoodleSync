@@ -29,7 +29,6 @@ export default function RoomBrowser() {
   };
 
   const handleJoinRoom = (roomId) => {
-    const userName = localStorage.getItem('ds_user') || 'Anonymous';
     navigate(`/board?room=${roomId}`);
   };
 
