@@ -42,11 +42,9 @@ export default defineConfig({
           if (id.includes('lucide-react')) return 'vendor-icons'
           if (id.includes('/motion/') || id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) return 'vendor-motion'
           if (id.includes('react-router')) return 'vendor-router'
-          // Keep only React's core packages in this chunk. Matching any path
-          // containing `/react/` also captures packages such as
-          // `@radix-ui/react-*` and `@floating-ui/react`, which can create a
-          // circular dependency between vendor chunks during startup.
-          if (/(^|[/\\])node_modules[/\\](?:react|react-dom|scheduler)(?:[/\\]|$)/.test(id)) return 'vendor-react'
+          // Keep React beside shared CommonJS interop helpers. Separating it
+          // into its own chunk can create a startup cycle with UI libraries
+          // that consume React during module initialization.
           return 'vendor'
         }
       }
