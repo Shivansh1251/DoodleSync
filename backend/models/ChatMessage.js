@@ -23,6 +23,11 @@ const chatMessageSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
+  },
+  expiresAt: {
+    type: Date,
+    default: null,
+    expires: 0
   }
 }, {
   timestamps: true

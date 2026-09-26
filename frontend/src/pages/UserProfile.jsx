@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import AuthService from '../utils/AuthService'
+import { useTheme } from '../context/ThemeContext'
 
 const PRESET_AVATARS = [
   'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_32.png',
@@ -23,24 +24,41 @@ const PRESET_AVATARS = [
   'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_8.png',
 ]
 
+const createProfileForm = (profile) => ({
+  name: profile?.name || '',
+  bio: profile?.bio || '',
+  theme: profile?.preferences?.theme || 'system',
+  emailNotifications: profile?.preferences?.emailNotifications ?? true,
+  soundEnabled: profile?.preferences?.soundEnabled ?? true
+})
+
 export default function UserProfile() {
-  const { user, logout, updateProfile, uploadAvatar, setPresetAvatar } = useAuth()
+  const { user, loading: authLoading, logout, updateProfile, uploadAvatar, setPresetAvatar } = useAuth()
+  const { setThemePreference } = useTheme()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
+  const syncedProfileId = useRef(null)
   
   const [editing, setEditing] = useState(false)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
-  const [form, setForm] = useState({
-    name: user?.name || '',
-    bio: user?.bio || '',
-    theme: user?.preferences?.theme || 'system',
-    emailNotifications: user?.preferences?.emailNotifications ?? true,
-    soundEnabled: user?.preferences?.soundEnabled ?? true
-  })
+  const [form, setForm] = useState(() => createProfileForm(user))
   const [activity, setActivity] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!user) {
+      syncedProfileId.current = null
+      return
+    }
+
+    const profileId = user.id || user._id
+    if (profileId && syncedProfileId.current !== profileId) {
+      setForm(createProfileForm(user))
+      syncedProfileId.current = profileId
+    }
+  }, [user])
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -51,13 +69,19 @@ export default function UserProfile() {
   }
 
   const handleSave = async () => {
+    const name = form.name.trim()
+    if (!name) {
+      setError('Please enter your name.')
+      return
+    }
+
     setLoading(true)
     setError('')
     setMessage('')
 
     try {
       await updateProfile({
-        name: form.name,
+        name,
         bio: form.bio,
         preferences: {
           theme: form.theme,
@@ -65,6 +89,8 @@ export default function UserProfile() {
           soundEnabled: form.soundEnabled
         }
       })
+      setForm((current) => ({ ...current, name }))
+      setThemePreference(form.theme)
       setMessage('Profile updated successfully')
       setEditing(false)
     } catch (err) {
@@ -75,12 +101,14 @@ export default function UserProfile() {
   }
 
   const handleAvatarChange = async (e) => {
+    const input = e.currentTarget
     const file = e.target.files?.[0]
     if (!file) return
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('File size must be less than 5MB')
+      input.value = ''
       return
     }
 
@@ -95,6 +123,7 @@ export default function UserProfile() {
       setError(err.message || 'Failed to upload avatar')
     } finally {
       setLoading(false)
+      input.value = ''
     }
   }
 
@@ -119,6 +148,12 @@ export default function UserProfile() {
     navigate('/login')
   }
 
+  const handleCancel = () => {
+    setForm(createProfileForm(user))
+    setError('')
+    setEditing(false)
+  }
+
   const loadActivity = async () => {
     try {
       const data = await AuthService.getActivity()
@@ -129,6 +164,7 @@ export default function UserProfile() {
   }
 
   if (!user) {
+    if (!authLoading) return <Navigate to="/login" replace />
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600 dark:text-gray-400">Loading...</p>
@@ -204,6 +240,20 @@ export default function UserProfile() {
                     {user.email && (
                       <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
                     )}
+                    {editing && (
+                      <label className="mt-3 block w-full max-w-sm">
+                        <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Display name</span>
+                        <input
+                          name="name"
+                          value={form.name}
+                          onChange={onChange}
+                          maxLength={80}
+                          autoComplete="name"
+                          required
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                        />
+                      </label>
+                    )}
                   </div>
                   {!editing ? (
                     <div className="space-x-2">
@@ -225,7 +275,7 @@ export default function UserProfile() {
                   ) : (
                     <div className="space-x-2">
                       <button
-                        onClick={() => setEditing(false)}
+                        onClick={handleCancel}
                         disabled={loading}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                       >

@@ -5,6 +5,7 @@ import Footer from "../Components/Footer"
 import AuthModal from "../Components/AuthModal"
 import InteractiveSketch from "../Components/InteractiveSketch"
 import PaperBinExperience from "../Components/PaperBinExperience"
+import { FooterReveal, FooterRevealContent, FooterRevealFooter } from "../Components/motion-ui/footer-reveal"
 import RevealOnScroll from "../Components/RevealOnScroll"
 import SeoHead from "../Components/SeoHead"
 import { LiquidMetalButton } from "../Components/ui/liquid-metal-button"
@@ -62,6 +63,8 @@ export default function Home() {
 
   return (
     <PaperBinExperience>
+    <FooterReveal className="doodlesync-footer-reveal">
+    <FooterRevealContent className="doodlesync-footer-content">
     <main className="overflow-hidden">
       <SeoHead />
       <Navbar />
@@ -198,10 +201,13 @@ export default function Home() {
       </section>
       </RevealOnScroll>
 
-      <Footer />
-      
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </main>
+    <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+    </FooterRevealContent>
+    <FooterRevealFooter className="doodlesync-footer-shell">
+      <Footer />
+    </FooterRevealFooter>
+    </FooterReveal>
     </PaperBinExperience>
   )
 }

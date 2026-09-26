@@ -29,7 +29,10 @@ const seedDatabase = async () => {
           gridSize: null
         }
       },
-      createdBy: 'system'
+      createdBy: 'system',
+      creatorType: 'system',
+      visibility: 'public',
+      expiresAt: null
     });
     await sampleRoom.save();
 

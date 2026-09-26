@@ -1,105 +1,69 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-export default function OnlineUsers({ socket, roomId, onlineUsers = [] }) {
-  const [activeUsers, setActiveUsers] = useState(new Set()) // Users currently drawing/active
+export default function OnlineUsers({ socket, onlineUsers = [] }) {
+  const [activeUsers, setActiveUsers] = useState(new Set())
 
   useEffect(() => {
-    if (!socket?.current) {
-      return
-    }
+    const currentSocket = socket?.current
+    if (!currentSocket) return undefined
 
-    const s = socket.current
+    const handleActivity = (data) => {
+      if (!data?.userId) return
 
-    // Handle user activity (drawing, moving, etc.)
-    s.on('user-activity', (data) => {
-      if (data?.userId) {
-        if (data.active) {
-          setActiveUsers(prev => new Set([...prev, data.userId]))
-          
-          // Remove from active after 3 seconds of inactivity
-          setTimeout(() => {
-            setActiveUsers(prev => {
-              const newSet = new Set(prev)
-              newSet.delete(data.userId)
-              return newSet
-            })
-          }, 3000)
-        } else {
-          // Immediately remove if explicitly set to inactive
-          setActiveUsers(prev => {
-            const newSet = new Set(prev)
-            newSet.delete(data.userId)
-            return newSet
-          })
-        }
+      if (!data.active) {
+        setActiveUsers((current) => {
+          const next = new Set(current)
+          next.delete(data.userId)
+          return next
+        })
+        return
       }
-    })
 
-    s.on('disconnect', () => {
-      setActiveUsers(new Set())
-    })
-
-    return () => {
-      s.off('user-activity')
-      s.off('disconnect')
+      setActiveUsers((current) => new Set([...current, data.userId]))
+      window.setTimeout(() => {
+        setActiveUsers((current) => {
+          const next = new Set(current)
+          next.delete(data.userId)
+          return next
+        })
+      }, 3000)
     }
-  }, [socket, roomId])
+    const handleDisconnect = () => setActiveUsers(new Set())
+
+    currentSocket.on('user-activity', handleActivity)
+    currentSocket.on('disconnect', handleDisconnect)
+    return () => {
+      currentSocket.off('user-activity', handleActivity)
+      currentSocket.off('disconnect', handleDisconnect)
+    }
+  }, [socket])
 
   if (onlineUsers.length === 0) {
-    const s = socket?.current
-    
+    const connected = Boolean(socket?.current?.connected)
     return (
-      <div className="text-xs text-gray-600 dark:text-gray-400 transition-colors duration-300">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">Present:</span>
-          <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full transition-colors duration-300"></div>
-          <span>No users online</span>
-        </div>
-        <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 transition-colors duration-300">
-          Socket: {s?.connected ? 'Connected' : 'Disconnected'} | ID: {s?.id || 'None'}
-        </div>
+      <div className="room-chat-no-people">
+        <span className={connected ? 'is-connected' : ''} />
+        {connected ? 'You’re here — invite someone to join' : 'Reconnecting to your room…'}
       </div>
     )
   }
 
   return (
-    <div className="text-xs text-gray-600 dark:text-gray-400 transition-colors duration-300">
-      <div className="font-semibold mb-1">Present ({onlineUsers.length}):</div>
-      <div className="flex flex-wrap gap-1">
-        {onlineUsers.slice(0, 8).map((user) => {
-          const isActive = activeUsers.has(user.id)
-          return (
-            <div key={user.id} className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs transition-colors duration-300 border border-gray-200 dark:border-gray-600">
-              <div className="relative">
-                {user.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name} 
-                    className="w-4 h-4 rounded-full bg-white dark:bg-gray-800"
-                  />
-                ) : (
-                  <div className={`w-4 h-4 rounded-full flex-shrink-0 ${
-                    isActive ? 'bg-green-500 animate-pulse' : 'bg-blue-500'
-                  }`}></div>
-                )}
-                {isActive && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-gray-800"></span>
-                )}
-              </div>
-              <span className={`truncate max-w-20 transition-colors duration-300 ${
-                isActive ? 'text-green-700 dark:text-green-300 font-medium' : 'text-gray-700 dark:text-gray-300'
-              }`}>
-                {user.name}
-              </span>
-            </div>
-          )
-        })}
-        {onlineUsers.length > 8 && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 transition-colors duration-300">
-            +{onlineUsers.length - 8}
-          </div>
-        )}
-      </div>
+    <div className="room-chat-people-list">
+      {onlineUsers.slice(0, 7).map((person) => {
+        const active = activeUsers.has(person.id)
+        const initial = person.name?.trim().charAt(0).toUpperCase() || '?'
+        return (
+          <span className="room-chat-person" key={person.id} title={`${person.name || 'Guest'}${active ? ' is active' : ''}`}>
+            <span className="room-chat-person-avatar">
+              {person.avatar ? <img src={person.avatar} alt="" loading="lazy" /> : initial}
+              <i className={active ? 'is-active' : ''} />
+            </span>
+            <span>{person.name || 'Guest'}</span>
+          </span>
+        )
+      })}
+      {onlineUsers.length > 7 && <span className="room-chat-person-more">+{onlineUsers.length - 7}</span>}
     </div>
   )
 }

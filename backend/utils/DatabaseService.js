@@ -6,10 +6,14 @@ export class DatabaseService {
   // Room operations
   static async createRoom(roomId, document = null, createdBy = 'Anonymous') {
     try {
+      const isSystemRoom = createdBy === 'system';
       const room = new Room({
         roomId,
         document,
-        createdBy
+        createdBy: createdBy === 'Anonymous' ? 'Guest' : createdBy,
+        creatorType: isSystemRoom ? 'system' : 'guest',
+        visibility: 'public',
+        expiresAt: isSystemRoom ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
       return await room.save();
     } catch (error) {
@@ -24,17 +28,21 @@ export class DatabaseService {
     return await Room.findOne({ roomId });
   }
 
-  static async updateRoom(roomId, document, userId = 'Anonymous') {
+  static async updateRoom(roomId, document) {
     return await Room.findOneAndUpdate(
       { roomId },
-      { 
-        document, 
-        lastModified: new Date(),
-        createdBy: userId 
+      {
+        $set: { document, lastModified: new Date() },
+        $setOnInsert: {
+          createdBy: 'Guest',
+          creatorType: 'guest',
+          visibility: 'public',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }
       },
-      { 
-        upsert: true, 
-        new: true 
+      {
+        upsert: true,
+        new: true
       }
     );
   }
@@ -46,16 +54,25 @@ export class DatabaseService {
   }
 
   static async getAllRooms(limit = 20) {
-    return await Room.find({}, 'roomId lastModified createdBy')
+    return await Room.find({
+      visibility: 'public',
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    }, 'roomId lastModified createdBy creatorAvatar creatorType createdAt')
       .sort({ lastModified: -1 })
       .limit(limit);
   }
 
   // Chat operations
   static async saveMessage(roomId, message) {
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    }).select('expiresAt');
+    if (!room) return null;
     const chatMessage = new ChatMessage({
       roomId,
-      message
+      message,
+      expiresAt: room.expiresAt || null
     });
     return await chatMessage.save();
   }

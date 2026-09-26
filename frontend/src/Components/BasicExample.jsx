@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Tldraw } from 'tldraw'
 import 'tldraw/tldraw.css'
 import SideChat from './SideChat'
-import ConnectionStatus from './ConnectionStatus'
-import OnlineUsers from './OnlineUsers'
 import { io } from 'socket.io-client'
-import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import { usePageTransition } from '../context/PageTransitionContext'
+import { Check, Copy, LogOut, MessageCircle } from 'lucide-react'
 
 const SERVER = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000'
 
@@ -27,12 +26,13 @@ function getUser() {
 
 export default function BasicExample() {
   const { theme } = useTheme()
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(() => window.matchMedia('(min-width: 640px)').matches)
   const [socketConnected, setSocketConnected] = useState(false)
   const [chatMessages, setChatMessages] = useState([])
   const [onlineUsers, setOnlineUsers] = useState([])
   const [copied, setCopied] = useState(false)
-  const navigate = useNavigate()
+  const [roomUnavailable, setRoomUnavailable] = useState(false)
+  const { startPageTransition } = usePageTransition()
   
   // Simple room id from URL (?room=xyz). Defaults to 'default'
   const roomId = useMemo(() => new URLSearchParams(window.location.search).get('room') || 'default', [])
@@ -128,6 +128,12 @@ export default function BasicExample() {
     
     s.on('disconnect', () => {
       setSocketConnected(false)
+    })
+
+    s.on('room-unavailable', () => {
+      setRoomUnavailable(true)
+      setSocketConnected(false)
+      s.disconnect()
     })
 
     // Handle chat messages in BasicExample
@@ -238,11 +244,11 @@ export default function BasicExample() {
           s.disconnect()
           
           // Navigate back to room selection
-          navigate('/room-entry')
+          startPageTransition('/room-entry', 'reverse')
         }, 200)
       } else {
         // If not connected, just navigate away
-        navigate('/room-entry')
+        startPageTransition('/room-entry', 'reverse')
       }
     }
   }
@@ -253,70 +259,34 @@ export default function BasicExample() {
     boardContent = <div className="flex items-center justify-center h-full text-red-600 text-lg">Whiteboard failed to load. Check console for errors.</div>
   }
   return (
-    <div className="w-full h-screen flex relative">
-      {/* Leave Room Button - Top Center */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-white/95 backdrop-blur rounded-lg px-4 py-2 shadow-lg border">
-        <div className="flex items-center gap-4">
-          {/* <ConnectionStatus socket={socketRef} /> */}
-          <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
-            <span>Room: {roomId}</span>
-            <button
-              onClick={copyRoomId}
-              className="relative p-1 hover:bg-gray-200 rounded transition-colors group"
-              title="Copy Room ID"
-            >
-              {copied ? (
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              )}
-              {copied && (
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  Copied!
-                </span>
-              )}
-            </button>
-          </div>
-          <button
-            onClick={leaveRoom}
-            className="px-3 py-1.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-            title="Leave Room"
-          >
-            Leave Room
+    <div className="room-workspace">
+      <div className="room-topbar" aria-label="Room controls">
+        <div className="room-topbar-info">
+          <span className={`room-topbar-presence${socketConnected ? ' is-connected' : ''}`} aria-label={socketConnected ? 'Connected' : 'Connecting'} />
+          <span className="room-topbar-copy">
+            <strong title={roomId}>{roomId}</strong>
+          </span>
+          <button type="button" className="room-topbar-copy-button" onClick={copyRoomId} title={copied ? 'Copied room code' : 'Copy room code'} aria-label={copied ? 'Room code copied' : 'Copy room code'}>
+            {copied ? <Check size={16} /> : <Copy size={16} />}
           </button>
         </div>
+        <span className="room-topbar-divider" aria-hidden="true" />
+        <button type="button" onClick={leaveRoom} className="room-leave-button" title="Leave Room">
+          <LogOut size={15} aria-hidden="true" />
+          <span>Leave room</span>
+        </button>
       </div>
-      
-      <div className="tldraw__editor flex-1 h-full">
-        {boardContent}
-      </div>
-      {/* Sidebar on >= sm screens */}
-      {open && (
-        <div className="hidden sm:block h-full">
-          <SideChat 
-            roomId={roomId} 
-            socket={socketRef} 
-            onClose={() => setOpen(false)}
-            messages={chatMessages}
-            onSendMessage={sendChatMessage}
-            user={user}
-            connected={socketConnected}
-            onlineUsers={onlineUsers}
-          />
+      <main className="room-workspace-main">
+        <div className="tldraw__editor room-canvas-pane">
+          {boardContent}
         </div>
-      )}
-      {/* Overlay panel on small screens */}
-      {open && (
-        <div className="sm:hidden absolute inset-0 bg-black/20 dark:bg-black/50 transition-colors duration-300">
-          <div className="ml-auto h-full w-11/12 max-w-sm bg-white dark:bg-gray-800 shadow-xl transition-colors duration-300">
+        {open && (
+          <div className="room-chat-desktop hidden sm:block">
             <SideChat 
               roomId={roomId} 
               socket={socketRef} 
               onClose={() => setOpen(false)}
+              onLeaveRoom={leaveRoom}
               messages={chatMessages}
               onSendMessage={sendChatMessage}
               user={user}
@@ -324,18 +294,48 @@ export default function BasicExample() {
               onlineUsers={onlineUsers}
             />
           </div>
+        )}
+        {open && (
+          <div className="room-chat-mobile-dock sm:hidden">
+            <SideChat
+              roomId={roomId}
+              socket={socketRef}
+              onClose={() => setOpen(false)}
+              onLeaveRoom={leaveRoom}
+              messages={chatMessages}
+              onSendMessage={sendChatMessage}
+              user={user}
+              connected={socketConnected}
+              onlineUsers={onlineUsers}
+            />
+          </div>
+        )}
+      </main>
+
+      {roomUnavailable && (
+        <div className="room-unavailable-overlay" role="alertdialog" aria-modal="true" aria-labelledby="room-unavailable-title">
+          <section>
+            <span>ROOM UNAVAILABLE</span>
+            <h1 id="room-unavailable-title">This room has expired or doesn’t exist.</h1>
+            <p>Guest rooms are kept for seven days. Create a new room or check the room code.</p>
+            <button type="button" onClick={() => startPageTransition('/room-entry', 'reverse')}>Back to rooms</button>
+          </section>
         </div>
       )}
-      
-      {/* Chat toggle button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="fixed right-6 bottom-6 z-[100] rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur text-purple-600 dark:text-purple-400 shadow-lg px-3 py-2 text-sm font-medium hover:bg-white dark:hover:bg-gray-700 border border-purple-200 dark:border-purple-700 transition-all duration-200"
-        style={{ zIndex: 9999 }}
-        title={open ? 'Close Chat' : 'Open Chat'}
-      >
-        {open ? '✕' : '💬'} {open ? 'Close' : 'Chat'}
-      </button>
+
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="room-chat-toggle"
+          title="Open room chat"
+          aria-label="Open room chat"
+        >
+          <MessageCircle size={19} />
+          <span>Chat</span>
+          {chatMessages.length > 0 && <i aria-label={`${chatMessages.length} messages`} />}
+        </button>
+      )}
     </div>
   )
 }

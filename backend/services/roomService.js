@@ -6,7 +6,10 @@ const roomService = {
   },
 
   async getRecentRooms(limit = 20) {
-    return Room.find({}, 'roomId lastModified createdBy')
+    return Room.find({
+      visibility: 'public',
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    }, 'roomId lastModified createdBy creatorAvatar creatorType createdAt')
       .sort({ lastModified: -1 })
       .limit(limit);
   },
@@ -15,9 +18,13 @@ const roomService = {
     return Room.findOneAndUpdate(
       { roomId },
       {
-        document,
-        lastModified: new Date(),
-        createdBy,
+        $set: { document, lastModified: new Date() },
+        $setOnInsert: {
+          createdBy: createdBy === 'Anonymous' ? 'Guest' : String(createdBy).slice(0, 80),
+          creatorType: 'guest',
+          visibility: 'public',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }
       },
       {
         upsert: true,

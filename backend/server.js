@@ -3,6 +3,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
+import { createHash } from "node:crypto";
 import cors from "cors";
 import session from "express-session";
 import connectDB from "./config/database.js";
@@ -12,6 +13,7 @@ import User from "./models/User.js";
 import passport from "./config/passport.js";
 import authRoutes from "./routes/auth.js";
 import oauthRoutes from "./routes/oauth.js";
+import { authenticateToken, optionalAuth } from "./middleware/auth.js";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -98,7 +100,10 @@ app.get('/api/health', (req, res) => {
 app.get('/api/rooms/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const room = await Room.findOne({ roomId });
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    });
     res.json({ 
       exists: !!room, 
       data: room ? room.document : null,
@@ -112,6 +117,11 @@ app.get('/api/rooms/:roomId', async (req, res) => {
 app.get('/api/rooms/:roomId/chat', async (req, res) => {
   try {
     const { roomId } = req.params;
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    }).select('_id');
+    if (!room) return res.json({ messages: [] });
     const limit = parseInt(req.query.limit) || 50;
     const messages = await getChatHistory(roomId, limit);
     res.json({ messages });
@@ -120,14 +130,92 @@ app.get('/api/rooms/:roomId/chat', async (req, res) => {
   }
 });
 
-app.get('/api/rooms', async (req, res) => {
+app.get('/api/rooms', optionalAuth, async (req, res) => {
   try {
-    const rooms = await Room.find({}, 'roomId lastModified createdBy')
+    const roomVisibility = [
+      { visibility: 'public' },
+      { visibility: { $exists: false }, roomId: { $not: /^pvt-/ } }
+    ];
+    if (req.user) {
+      roomVisibility.push({ visibility: 'private', creatorId: req.user._id });
+    } else {
+      const ownerKey = req.get('X-Room-Owner');
+      if (typeof ownerKey === 'string' && ownerKey.length >= 20 && ownerKey.length <= 200) {
+        const ownerHash = createHash('sha256').update(ownerKey).digest('hex');
+        roomVisibility.push({ visibility: 'private', creatorSessionHash: ownerHash });
+      }
+    }
+
+    const rooms = await Room.find({
+      $and: [
+        { $or: roomVisibility },
+        { $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }
+      ]
+    }, 'roomId lastModified createdBy creatorAvatar creatorType createdAt visibility')
       .sort({ lastModified: -1 })
       .limit(20);
     res.json({ rooms });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch rooms' });
+  }
+});
+
+const authenticateRoomCreatorWhenPresent = (req, res, next) => {
+  if (!req.headers.authorization) return next();
+  return authenticateToken(req, res, next);
+};
+
+const createRoomRecord = async ({ roomId, visibility, req, guestName, guestAvatar, ownerKey, document = null }) => {
+  const accountCreator = req.user && !req.user.isGuest;
+  const creatorName = accountCreator
+    ? String(req.user.name || 'Member').trim().slice(0, 80)
+    : (typeof guestName === 'string' ? guestName.trim().slice(0, 80) : '') || 'Guest';
+  const avatar = accountCreator ? req.user.avatar : guestAvatar;
+  const creatorAvatar = typeof avatar === 'string' && avatar.length <= 2048
+    && (/^https:\/\//i.test(avatar) || /^\/uploads\/avatars\/[a-zA-Z0-9._-]+$/.test(avatar))
+    ? avatar
+    : null;
+
+  const creatorSessionHash = !req.user && typeof ownerKey === 'string' && ownerKey.length >= 20 && ownerKey.length <= 200
+    ? createHash('sha256').update(ownerKey).digest('hex')
+    : null;
+
+  return Room.create({
+    roomId,
+    document,
+    createdBy: creatorName,
+    creatorId: req.user?._id || null,
+    creatorSessionHash,
+    creatorAvatar,
+    creatorType: accountCreator ? 'user' : 'guest',
+    visibility,
+    expiresAt: accountCreator ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
+};
+
+app.post('/api/rooms', authenticateRoomCreatorWhenPresent, async (req, res) => {
+  try {
+    const { roomId, visibility = 'public', name, avatar, ownerKey } = req.body || {};
+    if (typeof roomId !== 'string' || !/^[a-zA-Z0-9_-]{3,80}$/.test(roomId)) {
+      return res.status(400).json({ error: 'Room ID must be 3–80 letters, numbers, dashes, or underscores.' });
+    }
+    if (!['public', 'private'].includes(visibility)) {
+      return res.status(400).json({ error: 'Room visibility must be public or private.' });
+    }
+
+    const room = await createRoomRecord({ roomId, visibility, req, guestName: name, guestAvatar: avatar, ownerKey });
+    return res.status(201).json({ room: {
+      roomId: room.roomId,
+      createdBy: room.createdBy,
+      creatorAvatar: room.creatorAvatar,
+      creatorType: room.creatorType,
+      createdAt: room.createdAt,
+      expiresAt: room.expiresAt
+    } });
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ error: 'That room ID is already in use. Please try again.' });
+    console.error('Error creating room:', error);
+    return res.status(500).json({ error: 'Failed to create room' });
   }
 });
 
@@ -144,21 +232,23 @@ app.delete('/api/rooms/:roomId', async (req, res) => {
 });
 
 // POST endpoint to create a test room
-app.post('/api/create-test-room', async (req, res) => {
+app.post('/api/create-test-room', authenticateRoomCreatorWhenPresent, async (req, res) => {
   try {
     const roomId = `test-room-${Date.now()}`;
-    const testRoom = new Room({
+    const testRoom = await createRoomRecord({
       roomId,
+      visibility: 'public',
+      req,
+      guestName: req.body?.name,
+      guestAvatar: req.body?.avatar,
       document: {
         elements: [],
         appState: {
           viewBackgroundColor: '#ffffff',
           gridSize: null
         }
-      },
-      createdBy: 'test-user'
+      }
     });
-    await testRoom.save();
     res.json({ 
       success: true, 
       roomId,
@@ -174,19 +264,11 @@ app.post('/api/create-test-room', async (req, res) => {
 const activeRooms = new Map();
 
 // Helper functions for database operations
-const saveRoomToDB = async (roomId, document, userId = 'Anonymous') => {
+const saveRoomToDB = async (roomId, document) => {
   try {
-    await Room.findOneAndUpdate(
-      { roomId },
-      { 
-        document, 
-        lastModified: new Date(),
-        createdBy: userId 
-      },
-      { 
-        upsert: true, 
-        new: true 
-      }
+    await Room.updateOne(
+      { roomId, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] },
+      { $set: { document, lastModified: new Date() } }
     );
     console.log(`Room ${roomId} saved to database`);
   } catch (error) {
@@ -196,7 +278,10 @@ const saveRoomToDB = async (roomId, document, userId = 'Anonymous') => {
 
 const loadRoomFromDB = async (roomId) => {
   try {
-    const room = await Room.findOne({ roomId });
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    });
     return room ? room.document : null;
   } catch (error) {
     console.error(`Error loading room ${roomId}:`, error);
@@ -206,9 +291,15 @@ const loadRoomFromDB = async (roomId) => {
 
 const saveChatMessage = async (roomId, message) => {
   try {
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    }).select('expiresAt');
+    if (!room) return;
     const chatMessage = new ChatMessage({
       roomId,
-      message
+      message,
+      expiresAt: room.expiresAt || null
     });
     await chatMessage.save();
     console.log(`Chat message saved for room ${roomId}`);
@@ -235,6 +326,14 @@ io.on("connection", (socket) => {
   console.log("socket connected", socket.id);
 
   socket.on("join-room", async (roomId, user) => {
+    const room = await Room.findOne({
+      roomId,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }]
+    });
+    if (!room) {
+      socket.emit('room-unavailable', { roomId });
+      return;
+    }
     socket.join(roomId);
     socket.data.user = user || { id: socket.id, name: "Anonymous" };
     
@@ -313,11 +412,12 @@ io.on("connection", (socket) => {
 
   // receive doc updates (you can send patches or full doc)
   socket.on("doc-update", async (roomId, docDelta) => {
+    if (!socket.rooms.has(roomId)) return;
     // Update active room data
     activeRooms.set(roomId, docDelta);
 
     // Save to database (async, non-blocking)
-    saveRoomToDB(roomId, docDelta, socket.data.user?.id);
+    saveRoomToDB(roomId, docDelta);
 
     // broadcast to others in same room (except sender)
     socket.to(roomId).emit("doc-update", docDelta);
@@ -325,6 +425,7 @@ io.on("connection", (socket) => {
 
   // chat message
   socket.on("chat-message", async (roomId, message) => {
+    if (!socket.rooms.has(roomId)) return;
     // message: { author: {id,name}, text, ts }
     // Add error handling for undefined message
     if (!message || typeof message !== 'object') {
@@ -349,6 +450,7 @@ io.on("connection", (socket) => {
 
   // Handle user activity (drawing, moving, etc.)
   socket.on("activity", (roomId, activityData) => {
+    if (!socket.rooms.has(roomId)) return;
     // Add user info and timestamp
     const activity = {
       ...activityData,
@@ -365,6 +467,7 @@ io.on("connection", (socket) => {
 
   // Handle leave-room event
   socket.on("leave-room", async (roomId) => {
+    if (!socket.rooms.has(roomId)) return;
     console.log(`[leave-room] room=${roomId} user=${socket.data.user?.name}`);
     
     // Send leave system message to chat
@@ -410,6 +513,7 @@ io.on("connection", (socket) => {
 
   // Handle cursor movement for collaborative cursors
   socket.on("cursor-move", (roomId, cursorData) => {
+    if (!socket.rooms.has(roomId)) return;
     // Add user info and broadcast to others in room
     const cursor = {
       x: cursorData.x,
@@ -426,9 +530,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("save-room", async (roomId) => {
+    if (!socket.rooms.has(roomId)) return;
     const roomData = activeRooms.get(roomId);
     if (roomData) {
-      await saveRoomToDB(roomId, roomData, socket.data.user?.id);
+      await saveRoomToDB(roomId, roomData);
     }
   });
 

@@ -3,21 +3,40 @@ import { createContext, useContext, useLayoutEffect, useState } from 'react'
 
 const ThemeContext = createContext(null)
 
-function getInitialTheme() {
+function getInitialThemePreference() {
   if (typeof window === 'undefined') return 'light'
 
   try {
+    const savedPreference = window.localStorage.getItem('theme-preference')
+    if (savedPreference === 'light' || savedPreference === 'dark' || savedPreference === 'system') return savedPreference
     const savedTheme = window.localStorage.getItem('theme')
     if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme
   } catch {
     // The theme still works when browser storage is unavailable.
   }
 
+  return 'system'
+}
+
+function resolveTheme(preference) {
+  if (preference === 'light' || preference === 'dark') return preference
+  if (typeof window === 'undefined') return 'light'
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(getInitialTheme)
+  const [themePreference, setThemePreferenceState] = useState(getInitialThemePreference)
+  const [theme, setTheme] = useState(() => resolveTheme(themePreference))
+
+  useLayoutEffect(() => {
+    if (themePreference !== 'system') return undefined
+    const media = window.matchMedia?.('(prefers-color-scheme: dark)')
+    if (!media) return undefined
+    const syncSystemTheme = (event) => setTheme(event.matches ? 'dark' : 'light')
+    setTheme(media.matches ? 'dark' : 'light')
+    media.addEventListener?.('change', syncSystemTheme)
+    return () => media.removeEventListener?.('change', syncSystemTheme)
+  }, [themePreference])
 
   useLayoutEffect(() => {
     const root = window.document.documentElement
@@ -30,15 +49,22 @@ export function ThemeProvider({ children }) {
 
     try {
       window.localStorage.setItem('theme', theme)
+      window.localStorage.setItem('theme-preference', themePreference)
     } catch {
       // Keep theme switching functional when storage is blocked or full.
     }
-  }, [theme])
+  }, [theme, themePreference])
 
-  const toggleTheme = () => setTheme((current) => current === 'dark' ? 'light' : 'dark')
+  const setThemePreference = (preference) => {
+    const nextPreference = ['light', 'dark', 'system'].includes(preference) ? preference : 'system'
+    setThemePreferenceState(nextPreference)
+    setTheme(resolveTheme(nextPreference))
+  }
+
+  const toggleTheme = () => setThemePreference(theme === 'dark' ? 'light' : 'dark')
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setThemePreference }}>
       {children}
     </ThemeContext.Provider>
   )
