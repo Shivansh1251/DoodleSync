@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, ArrowUpRight, LoaderCircle, Pencil, Sparkles, UserRound, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePageTransition } from '../context/PageTransitionContext'
 
 export default function AuthModal({ isOpen, onClose }) {
   const navigate = useNavigate()
   const { guestLogin } = useAuth()
+  const { startPageTransition } = usePageTransition()
   const [guestName, setGuestName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -62,7 +64,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setError('')
     try {
       await guestLogin(guestName.trim())
-      closeModal(() => navigate('/room-entry'))
+      closeModal(() => startPageTransition('/room-entry', 'forward'))
     } catch (err) {
       setError(err.message || 'Could not start your guest session. Try again.')
       setLoading(false)

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { usePageTransition } from '../context/PageTransitionContext'
 import DoodleEye from './DoodleEye'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
@@ -11,6 +12,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
   const { user, isAuthenticated, logout } = useAuth()
+  const { startPageTransition } = usePageTransition()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -135,7 +137,11 @@ export default function Navbar() {
                       <Link
                         to="/room-entry"
                         className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => setDropdownOpen(false)}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          setDropdownOpen(false)
+                          startPageTransition('/room-entry', 'forward')
+                        }}
                       >
                         Join Room
                       </Link>
@@ -247,7 +253,15 @@ export default function Navbar() {
                 <Link to="/profile" className="text-center px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                   Profile
                 </Link>
-                <Link to="/room-entry" className="text-center px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors">
+                <Link
+                  to="/room-entry"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    setOpen(false)
+                    startPageTransition('/room-entry', 'forward')
+                  }}
+                  className="text-center px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                >
                   Join Room
                 </Link>
                 <button

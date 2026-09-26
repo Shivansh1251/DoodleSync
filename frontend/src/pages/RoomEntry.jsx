@@ -250,7 +250,7 @@ export default function RoomEntry() {
                 <KeyRound size={17} /><span>Private</span>
               </button>
               <button type="button" onClick={() => setMode('create')} aria-pressed={mode === 'create'} className={mode === 'create' ? 'is-selected' : ''}>
-                <Plus size={17} /><span>+ Private room</span>
+                <Plus size={17} /><span>Private room</span>
               </button>
             </div>
 

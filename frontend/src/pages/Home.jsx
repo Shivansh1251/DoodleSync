@@ -9,8 +9,9 @@ import { FooterReveal, FooterRevealContent, FooterRevealFooter } from "../Compon
 import RevealOnScroll from "../Components/RevealOnScroll"
 import SeoHead from "../Components/SeoHead"
 import { LiquidMetalButton } from "../Components/ui/liquid-metal-button"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useAuth } from '../context/AuthContext'
+import { usePageTransition } from '../context/PageTransitionContext'
 import { useState } from 'react'
 
 function HomeTemplatePreview({ template }) {
@@ -51,11 +52,11 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [activePreview, setActivePreview] = useState('moodboard')
-  const navigate = useNavigate()
+  const { startPageTransition } = usePageTransition()
 
   const handleStartWhiteboard = () => {
     if (isAuthenticated) {
-      navigate('/room-entry')
+      startPageTransition('/room-entry', 'forward')
     } else {
       setShowAuthModal(true)
     }
