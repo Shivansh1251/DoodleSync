@@ -7,7 +7,7 @@ import InteractiveSketch from "../Components/InteractiveSketch"
 import PaperBinExperience from "../Components/PaperBinExperience"
 import RevealOnScroll from "../Components/RevealOnScroll"
 import SeoHead from "../Components/SeoHead"
-import { LiquidMetalButton } from "../components/ui/liquid-metal-button"
+import { LiquidMetalButton } from "../Components/ui/liquid-metal-button"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'

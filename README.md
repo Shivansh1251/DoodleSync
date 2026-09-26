@@ -1,111 +1,126 @@
 # DoodleSync
 
-Collaborative online whiteboard and chat app for teams, classrooms, and friends. Draw, brainstorm, and chat in real time with collaborative cursors and room-based features.
+DoodleSync is a real-time collaborative whiteboard for teams, classrooms, and friends. Create a room, sketch ideas together, and keep the conversation beside the canvas.
 
-## ✨ Key Features
+## What you can do
 
-- **Infinite Whiteboard** with Tldraw - Draw, sketch, and plan together
-- **Collaborative Cursors** - See other users' real-time cursor movements with colored labels
-- **Real-time Chat** - Persistent chat with MongoDB storage and message history
-- **OTP Authentication** - Secure 2FA login with 6-digit codes
-- **Email System** - Welcome emails, login OTPs, password reset
-- **Public/Private Rooms** - Create rooms and share via copy-to-clipboard room IDs
-- **User Presence** - See who's online, drawing, and typing
-- **Dark Mode** - Seamless theme switching
-- **Google OAuth** - Quick sign-in option
+- Draw and brainstorm together on a shared whiteboard with live cursors and presence.
+- Chat in a room while ideas are taking shape.
+- Start from a Moodboard, Weekly Planner, Storyboard, or a blank page.
+- Sign in with email or Google, manage a profile, and collaborate in public or private rooms.
+- Use the animated pencil sketch, page toss, and dustbin interactions on the home canvas.
+- Switch between light and dark themes.
 
-## 🚀 Quick Start
+## Built with
 
-### Prerequisites
-- Node.js v18+
-- MongoDB (local or Atlas)
-- Gmail account (for email features)
+- **Frontend:** React 19, Vite 7, Tailwind CSS 4, TypeScript, React Router, Motion, Three.js, tldraw, Socket.IO Client
+- **Backend:** Node.js, Express 5, Socket.IO, MongoDB, Mongoose, Passport, JWT, Nodemailer
 
-### Installation & Setup
+## Getting started
+
+### Requirements
+
+- Node.js 20 or newer and npm
+- MongoDB, locally or through MongoDB Atlas
+- Email credentials for email verification and password-reset emails (optional)
+- Google OAuth credentials for Google sign-in (optional)
+
+### 1. Get the project
 
 ```sh
-# Clone repository
 git clone https://github.com/Shivansh1251/DoodleSync.git
 cd DoodleSync
+```
 
-# Install dependencies
-cd backend && npm install
-cd ../frontend && npm install
+### 2. Configure the backend
 
-# Configure backend/.env
+```sh
+cd backend
+npm install
+```
+
+Create `backend/.env`:
+
+```dotenv
 PORT=4000
 MONGODB_URI=mongodb://localhost:27017/doodlesync
-JWT_SECRET=your-secret-key
-EMAIL_USER=doodlesync@gmail.com
-EMAIL_PASSWORD=your-gmail-app-password
+JWT_SECRET=replace-with-a-long-random-secret
+SESSION_SECRET=replace-with-another-long-random-secret
 CLIENT_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 
-# Configure frontend/.env
+# Optional: configure email delivery
+EMAIL_USER=you@example.com
+EMAIL_PASSWORD=your-email-app-password
+
+# Optional: configure Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:4000/api/auth/google/callback
+```
+
+Keep real credentials in your local environment or deployment secret store—never commit `.env` files. `SESSION_SECRET` and `JWT_SECRET` must be unique, strong values in production.
+
+### 3. Configure the frontend
+
+In a second terminal, from the repository root:
+
+```sh
+cd frontend
+npm install
+```
+
+Create `frontend/.env.local`:
+
+```dotenv
 VITE_SERVER_URL=http://localhost:4000
 VITE_API_URL=http://localhost:4000/api
-# Optional in production: used for canonical and social metadata
-VITE_SITE_URL=https://your-production-domain.example
-
-# Start servers
-cd backend && npm run dev
-cd frontend && npm run dev
-
-# Open browser
-http://localhost:5173
+VITE_SITE_URL=http://localhost:5173
 ```
 
-**Gmail Setup:** Enable 2FA → Generate [App Password](https://myaccount.google.com/apppasswords) → Use as `EMAIL_PASSWORD`
+Only put public configuration in `VITE_` variables; Vite bundles them into frontend files.
 
-## 🛠️ Tech Stack
+### 4. Run the app
 
-**Frontend:** React 18 • Vite • Tldraw • Socket.IO Client • Tailwind CSS  
-**Backend:** Node.js • Express • Socket.IO • MongoDB • Mongoose • Nodemailer • JWT • Passport.js
+Start the backend from `backend/`:
 
-## 📖 Usage
-
-1. **Sign Up** with email/password or Google OAuth
-2. **Create Room** - Choose public or private
-3. **Share Room** - Click copy icon next to room ID
-4. **Collaborate** - Draw together and see real-time cursors
-5. **Chat** - Messages persist across sessions
-6. **Leave** - Click "Leave Room" to disconnect properly
-
-## 🔌 Key Socket Events
-
-**Client → Server:** `join-room`, `leave-room`, `doc-update`, `chat-message`, `cursor-move`  
-**Server → Client:** `doc-init`, `chat-history`, `chat-message`, `cursor-update`, `presence-update`
-
-## 📂 Project Structure
-
-```
-DoodleSync/
-├── backend/
-│   ├── models/        # User, Room, ChatMessage schemas
-│   ├── routes/        # Auth routes
-│   ├── utils/         # Email service, DB helpers
-│   └── server.js      # Main server + Socket.IO
-├── frontend/
-│   ├── src/
-│   │   ├── Components/  # Whiteboard, Chat, User presence
-│   │   ├── pages/       # Home, Login, Signup, Room entry
-│   │   └── utils/       # API & Auth services
-│   └── vite.config.js
+```sh
+npm run dev
 ```
 
-## 🤝 Contributing
+Start the frontend from `frontend/` in the second terminal:
 
-1. Fork the repo
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+```sh
+npm run dev
+```
 
-## 📝 License
+Open <http://localhost:5173>.
 
-MIT License
+## Useful commands
 
----
+Run these from `frontend/`:
 
-Made with ❤️ by [Shivansh1251](https://github.com/Shivansh1251)
+```sh
+npm run lint         # Check the frontend source
+npm run build        # Create the production frontend build
+npm run build:budget  # Build and check JavaScript bundle budgets
+```
 
-**⭐ Star this repo if you find it useful!**
+Run `npm start` from `backend/` to start the backend without the development watcher.
+
+## Contributing
+
+Contributions, bug reports, and feature ideas are welcome. For substantial changes, open an issue first so the approach can be discussed.
+
+1. Fork the repository and create a focused branch.
+2. Make the change and run the relevant lint/build checks.
+3. Open a pull request describing the change and how you verified it.
+4. Follow the project’s [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+DoodleSync is licensed under the [MIT License](LICENSE).
+
+## Made by
+
+Made with care by [Shivansh Garg](https://github.com/Shivansh1251).
