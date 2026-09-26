@@ -42,7 +42,9 @@ export default defineConfig({
           if (id.includes('lucide-react')) return 'vendor-icons'
           if (id.includes('/motion/') || id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) return 'vendor-motion'
           if (id.includes('react-router')) return 'vendor-router'
-          if (id.includes('/react/') || id.includes('react-dom')) return 'vendor-react'
+          // Keep React beside shared CommonJS interop helpers. Splitting React
+          // into its own manual chunk creates a cycle with UI dependencies
+          // that consume React during module initialization.
           return 'vendor'
         }
       }
