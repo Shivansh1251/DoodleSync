@@ -2,6 +2,7 @@ import './index.css'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useAnimate } from 'motion/react-mini'
+import { Analytics } from '@vercel/analytics/react'
 import AppErrorBoundary from './Components/AppErrorBoundary'
 import DoodleEye from './Components/DoodleEye'
 import { useTheme } from './context/ThemeContext'
@@ -171,6 +172,7 @@ function App() {
         {loaderVisible && (
           <DoodleLoader theme={theme} pageReady={pageReady} onComplete={removeLoader} />
         )}
+        <Analytics />
       </div>
     </AppErrorBoundary>
   )
